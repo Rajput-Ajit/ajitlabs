@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReadSpace – Settings</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:#0e0e22;color:#e2e8f0;margin:0}
+  .display{font-family:'Playfair Display',serif}
+  #sidebar{position:fixed;top:0;left:0;height:100%;width:256px;background:#12122a;border-right:1px solid rgba(201,168,76,0.15);z-index:50;transform:translateX(-100%);transition:transform 0.3s ease;display:flex;flex-direction:column;overflow-y:auto}
+  #sidebar.open{transform:translateX(0)}
+  #overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:49;display:none}
+  #overlay.show{display:block}
+  @media(min-width:1024px){#sidebar{transform:translateX(0)}#overlay{display:none!important}#main{margin-left:256px}#menu-btn{display:none}}
+  .card{background:#1a1a35;border:1px solid rgba(255,255,255,0.06);border-radius:16px}
+  .nl{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;margin-bottom:2px;font-size:14px;font-weight:500;color:#94a3b8;transition:all 0.2s;text-decoration:none}
+  .nl:hover{background:rgba(255,255,255,0.05);color:#e2e8f0}
+  .nl.on{background:linear-gradient(135deg,#c9a84c,#e8b84b);color:#12122a;font-weight:700}
+  .topbar{background:#12122a;border-bottom:1px solid rgba(201,168,76,0.1);position:sticky;top:0;z-index:40}
+  input,select,textarea{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;border-radius:10px}
+  input::placeholder,textarea::placeholder{color:#475569}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:#c9a84c}
+  select option{background:#1a1a35}
+  /* Settings section */
+  .settings-section{background:#1a1a35;border:1px solid rgba(255,255,255,0.06);border-radius:16px;overflow:hidden}
+  .section-header{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap-10px}
+  .setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.04)}
+  .setting-row:last-child{border-bottom:none}
+  /* Toggle */
+  .tog{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0}
+  .tog input{opacity:0;width:0;height:0}
+  .slider{position:absolute;cursor:pointer;inset:0;background:rgba(255,255,255,0.1);border-radius:999px;transition:0.3s}
+  .slider:before{position:absolute;content:'';height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s}
+  input:checked+.slider{background:linear-gradient(135deg,#c9a84c,#e8b84b)}
+  input:checked+.slider:before{transform:translateX(18px);background:#12122a}
+  /* Modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(4px);z-index:60;display:flex;align-items:flex-end;justify-content:center}
+  @media(min-width:640px){.modal-bg{align-items:center;padding:16px}}
+  .modal-card{background:#1a1a35;border:1px solid rgba(201,168,76,0.3);border-radius:20px 20px 0 0;width:100%;max-width:440px;padding:20px;position:relative;max-height:92vh;overflow-y:auto}
+  @media(min-width:640px){.modal-card{border-radius:20px;padding:24px}}
+  /* Tab */
+  .tab{padding:8px 16px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;color:#94a3b8;transition:all 0.2s;white-space:nowrap;border:none;background:transparent}
+  .tab.on{background:rgba(201,168,76,0.15);color:#e8b84b;border:1px solid rgba(201,168,76,0.2)}
+  ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:#0e0e22}::-webkit-scrollbar-thumb{background:#c9a84c44;border-radius:2px}
+</style>
+</head>
+<body>
+<div id="overlay" onclick="closeSidebar()"></div>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside id="sidebar">
+  <div class="p-5 border-b border-amber-900/20 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center text-base font-black text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">R</div>
+      <div>
+        <div class="display text-amber-300 font-bold text-lg leading-none">ReadSpace</div>
+        <div class="text-stone-500 text-xs">Admin Panel</div>
+      </div>
+    </div>
+  </div>
+  <div class="px-4 py-3 border-b border-amber-900/10 flex-shrink-0">
+    <select class="w-full text-xs px-3 py-2 rounded-lg text-amber-300" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2)">
+      <option>🏛 Nagpur Main Branch</option>
+      <option>🏛 Civil Lines Branch</option>
+      <option>🏛 Sitabuldi Branch</option>
+    </select>
+  </div>
+  <nav class="p-3 flex-1">
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-1">Main</div>
+    <a href="admin-dashboard.html" class="nl">⊞ <span>Dashboard</span></a>
+    <a href="admin-halls.html" class="nl">🏛 <span>Manage Halls</span></a>
+    <a href="admin-seats.html" class="nl">🪑 <span>Seat Manager</span></a>
+    <a href="admin-students.html" class="nl">👥 <span>Students</span></a>
+    <a href="admin-fees.html" class="nl">💳 <span>Fees & Payments</span></a>
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-4">Config</div>
+    <a href="admin-branches.html" class="nl">📍 <span>Branches</span></a>
+    <a href="admin-shifts.html" class="nl">⏰ <span>Shift Timings</span></a>
+    <a href="admin-subscription.html" class="nl">⭐ <span>Subscription</span></a>
+    <a href="admin-settings.html" class="nl on">⚙ <span>Settings</span></a>
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-4">My Plan</div>
+    <a href="saas-overview.html" class="nl">🚀 <span>Plan Overview</span></a>
+    <a href="saas-billing.html" class="nl">🧾 <span>Billing &amp; Invoices</span></a>
+    <a href="saas-upgrade.html" class="nl">⬆ <span>Upgrade Plan</span></a>
+    <a href="saas-usage.html" class="nl">📊 <span>Usage &amp; Limits</span></a>
+  </nav>
+  <div class="p-4 border-t border-amber-900/10 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">RS</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-xs text-stone-200 font-medium truncate">Rahul Sharma</div>
+        <div class="text-xs text-stone-500">Super Admin</div>
+      </div>
+      <a href="admin-login.html" class="text-stone-500 hover:text-red-400 text-lg" title="Logout">⏻</a>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<div id="main" class="flex flex-col min-h-screen">
+
+  <header class="topbar px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
+    <button id="menu-btn" onclick="openSidebar()" class="w-9 h-9 flex items-center justify-center rounded-xl text-amber-400 hover:bg-white/5 flex-shrink-0">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+    </button>
+    <div class="flex-1 min-w-0">
+      <div class="display text-base sm:text-xl text-stone-100 font-bold">Settings</div>
+      <div class="text-xs text-stone-500 hidden sm:block">System preferences, admin accounts & notifications</div>
+    </div>
+    <button id="save-btn" onclick="saveSettings()" class="text-xs px-3 sm:px-4 py-2 rounded-xl font-semibold text-stone-900 whitespace-nowrap" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Save Changes</button>
+  </header>
+
+  <main class="flex-1 p-4 sm:p-6">
+
+    <!-- Tabs -->
+    <div class="overflow-x-auto pb-2 mb-5">
+      <div class="flex gap-2 min-w-max">
+        <button class="tab on" onclick="setTab('general',this)">⚙ General</button>
+        <button class="tab" onclick="setTab('notifications',this)">🔔 Notifications</button>
+        <button class="tab" onclick="setTab('accounts',this)">👤 Admin Accounts</button>
+        <button class="tab" onclick="setTab('security',this)">🔒 Security</button>
+        <button class="tab" onclick="setTab('danger',this)">⚠ Danger Zone</button>
+      </div>
+    </div>
+
+    <!-- ── GENERAL TAB ── -->
+    <div id="tab-general" class="space-y-4">
+      <div class="settings-section">
+        <div class="section-header">
+          <div class="text-sm font-semibold text-stone-300 flex items-center gap-2">🏢 Library Information</div>
+        </div>
+        <div class="p-4 sm:p-5 space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Library Name</label>
+              <input type="text" value="ReadSpace Library" class="w-full px-3 py-2.5 text-sm">
+            </div>
+            <div>
+              <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Tagline</label>
+              <input type="text" value="Read. Grow. Succeed." class="w-full px-3 py-2.5 text-sm">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Support Email</label>
+              <input type="email" value="support@readspace.in" class="w-full px-3 py-2.5 text-sm">
+            </div>
+            <div>
+              <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Support Phone</label>
+              <input type="tel" value="+91 98765 43210" class="w-full px-3 py-2.5 text-sm">
+            </div>
+          </div>
+          <div>
+            <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Website</label>
+            <input type="url" value="https://readspace.in" class="w-full px-3 py-2.5 text-sm">
+          </div>
+          <div>
+            <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">GST Number</label>
+            <input type="text" placeholder="27AABCR1234M1Z5" class="w-full px-3 py-2.5 text-sm">
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="section-header">
+          <div class="text-sm font-semibold text-stone-300">🎨 Appearance</div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="text-sm text-stone-300 font-medium">Compact Mode</div>
+            <div class="text-xs text-stone-600">Reduce padding and spacing in the admin panel</div>
+          </div>
+          <label class="tog"><input type="checkbox"><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="text-sm text-stone-300 font-medium">Show Seat Map on Dashboard</div>
+            <div class="text-xs text-stone-600">Display mini seat map widget in dashboard overview</div>
+          </div>
+          <label class="tog"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div class="p-4 sm:p-5">
+          <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Date Format</label>
+          <select class="w-full sm:w-48 px-3 py-2.5 text-sm">
+            <option>DD/MM/YYYY</option>
+            <option>MM/DD/YYYY</option>
+            <option>YYYY-MM-DD</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="section-header">
+          <div class="text-sm font-semibold text-stone-300">💳 Fees & Billing</div>
+        </div>
+        <div class="p-4 sm:p-5 space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Late Fee (₹/day)</label>
+              <input type="number" value="50" class="w-full px-3 py-2.5 text-sm">
+            </div>
+            <div>
+              <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Grace Period (days)</label>
+              <input type="number" value="5" class="w-full px-3 py-2.5 text-sm">
+            </div>
+          </div>
+          <div>
+            <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Auto-remind Before Expiry</label>
+            <select class="w-full sm:w-48 px-3 py-2.5 text-sm">
+              <option>3 days before</option>
+              <option selected>5 days before</option>
+              <option>7 days before</option>
+              <option>10 days before</option>
+            </select>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="text-sm text-stone-300 font-medium">Auto-vacate Unpaid Seats</div>
+            <div class="text-xs text-stone-600">Release seat automatically after grace period ends</div>
+          </div>
+          <label class="tog"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="text-sm text-stone-300 font-medium">Generate Receipt on Payment</div>
+            <div class="text-xs text-stone-600">Auto-generate PDF receipt and send via WhatsApp/SMS</div>
+          </div>
+          <label class="tog"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── NOTIFICATIONS TAB ── -->
+    <div id="tab-notifications" class="space-y-4 hidden">
+      <div class="settings-section">
+        <div class="section-header"><div class="text-sm font-semibold text-stone-300">📱 SMS / WhatsApp Alerts</div></div>
+        <div class="setting-row">
+          <div><div class="text-sm text-stone-300 font-medium">Seat Assigned</div><div class="text-xs text-stone-600">Notify student when a seat is assigned to them</div></div>
+          <label class="tog"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div><div class="text-sm text-stone-300 font-medium">Fee Due Reminder</div><div class="text-xs text-stone-600">Send reminder before fee expiry date</div></div>
+          <label class="tog"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div><div class="text-sm text-stone-300 font-medium">Payment Received</div><div class="text-xs text-stone-600">Confirm payment receipt to student</div></div>
+          <label class="tog"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div><div class="text-sm text-stone-300 font-medium">Seat Vacated / Expired</div><div class="text-xs text-stone-600">Notify when student's seat is auto-released</div></div>
+          <label class="tog"><input type="checkbox"><span class="slider"></span></label>
+        </div>
+        <div class="p-4 sm:p-5">
+          <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">SMS API Key</label>
+          <input type="password" value="••••••••••••••••" class="w-full px-3 py-2.5 text-sm font-mono">
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="section-header"><div class="text-sm font-semibold text-stone-300">📧 Email Notifications</div></div>
+        <div class="setting-row">
+          <div><div class="text-sm text-stone-300 font-medium">Send Receipts via Email</div><div class="text-xs text-stone-600">Email PDF receipt on payment</div></div>
+          <label class="tog"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div><div class="text-sm text-stone-300 font-medium">Admin Daily Summary</div><div class="text-xs text-stone-600">Send daily report to admin email every morning</div></div>
+          <label class="tog"><input type="checkbox"><span class="slider"></span></label>
+        </div>
+        <div class="p-4 sm:p-5 space-y-3">
+          <div>
+            <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">From Email</label>
+            <input type="email" value="noreply@readspace.in" class="w-full px-3 py-2.5 text-sm">
+          </div>
+          <div>
+            <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">SMTP Host</label>
+            <input type="text" placeholder="smtp.gmail.com" class="w-full px-3 py-2.5 text-sm">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ACCOUNTS TAB ── -->
+    <div id="tab-accounts" class="space-y-4 hidden">
+      <div class="flex justify-end">
+        <button onclick="openAdminModal()" class="text-xs px-3 py-2 rounded-xl font-semibold text-stone-900" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">+ Add Admin</button>
+      </div>
+      <div id="admins-list" class="space-y-3"></div>
+    </div>
+
+    <!-- ── SECURITY TAB ── -->
+    <div id="tab-security" class="space-y-4 hidden">
+      <div class="settings-section">
+        <div class="section-header"><div class="text-sm font-semibold text-stone-300">🔐 Authentication</div></div>
+        <div class="setting-row">
+          <div><div class="text-sm text-stone-300 font-medium">Two-Factor Authentication</div><div class="text-xs text-stone-600">Require OTP on every admin login</div></div>
+          <label class="tog"><input type="checkbox"><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <div><div class="text-sm text-stone-300 font-medium">Session Timeout</div><div class="text-xs text-stone-600">Auto-logout after inactivity</div></div>
+          <select class="text-xs px-3 py-2 rounded-lg" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0">
+            <option>30 minutes</option>
+            <option selected>1 hour</option>
+            <option>4 hours</option>
+            <option>Never</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div><div class="text-sm text-stone-300 font-medium">Login Attempt Limit</div><div class="text-xs text-stone-600">Lock account after failed attempts</div></div>
+          <select class="text-xs px-3 py-2 rounded-lg" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0">
+            <option>3 attempts</option>
+            <option selected>5 attempts</option>
+            <option>10 attempts</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="section-header"><div class="text-sm font-semibold text-stone-300">🔑 Change Password</div></div>
+        <div class="p-4 sm:p-5 space-y-3">
+          <div>
+            <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Current Password</label>
+            <input type="password" placeholder="••••••••" class="w-full px-3 py-2.5 text-sm">
+          </div>
+          <div>
+            <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">New Password</label>
+            <input type="password" placeholder="••••••••" class="w-full px-3 py-2.5 text-sm">
+          </div>
+          <div>
+            <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Confirm Password</label>
+            <input type="password" placeholder="••••••••" class="w-full px-3 py-2.5 text-sm">
+          </div>
+          <button onclick="toast('Password updated!')" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-stone-900" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Update Password</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DANGER ZONE TAB ── -->
+    <div id="tab-danger" class="space-y-4 hidden">
+      <div class="settings-section" style="border-color:rgba(239,68,68,0.2)">
+        <div class="section-header" style="border-color:rgba(239,68,68,0.1)">
+          <div class="text-sm font-semibold text-red-400">⚠ Danger Zone</div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="text-sm text-stone-300 font-medium">Clear All Seat Assignments</div>
+            <div class="text-xs text-stone-600">Removes all current seat bookings. Students are notified.</div>
+          </div>
+          <button onclick="confirmDanger('Clear all seat assignments? This cannot be undone.')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-400 flex-shrink-0" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2)">Clear</button>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="text-sm text-stone-300 font-medium">Export All Data</div>
+            <div class="text-xs text-stone-600">Download all students, fees & booking data as CSV</div>
+          </div>
+          <button onclick="toast('Export started. File will download shortly.')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-stone-400 flex-shrink-0" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">Export</button>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="text-sm text-stone-300 font-medium">Archive This Month's Data</div>
+            <div class="text-xs text-stone-600">Move March 2026 data to archive and reset monthly records</div>
+          </div>
+          <button onclick="confirmDanger('Archive March 2026? Data will move to read-only archive.')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-400 flex-shrink-0" style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2)">Archive</button>
+        </div>
+        <div class="setting-row" style="border-bottom:none">
+          <div>
+            <div class="text-sm text-red-400 font-medium">Delete All Data & Reset</div>
+            <div class="text-xs text-stone-600">Permanently deletes all branches, students, fees, and bookings</div>
+          </div>
+          <button onclick="confirmDanger('PERMANENT: Delete all data and reset the system?')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-white flex-shrink-0" style="background:linear-gradient(135deg,#ef4444,#dc2626)">Delete All</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══ ADD ADMIN MODAL ═══ -->
+<div id="admin-modal" class="modal-bg hidden">
+  <div class="modal-card">
+    <div class="w-10 h-1 bg-stone-600 rounded-full mx-auto mb-4 sm:hidden"></div>
+    <button onclick="closeAdminModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-stone-400 hover:text-stone-200 rounded-lg hover:bg-white/10 text-xl">✕</button>
+    <h3 class="display text-xl text-stone-100 font-bold mb-5">Add Admin Account</h3>
+    <div class="space-y-3">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Full Name</label>
+          <input id="a-name" type="text" placeholder="Priya Mehta" class="w-full px-3 py-2.5 text-sm">
+        </div>
+        <div>
+          <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Role</label>
+          <select id="a-role" class="w-full px-3 py-2.5 text-sm">
+            <option>Branch Manager</option>
+            <option>Staff</option>
+            <option>Super Admin</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Email</label>
+        <input id="a-email" type="email" placeholder="priya@readspace.in" class="w-full px-3 py-2.5 text-sm">
+      </div>
+      <div>
+        <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Branch Access</label>
+        <select id="a-branch" class="w-full px-3 py-2.5 text-sm">
+          <option>All Branches</option>
+          <option>Nagpur Main</option>
+          <option>Civil Lines</option>
+          <option>Sitabuldi</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Temporary Password</label>
+        <input id="a-pass" type="password" placeholder="Will be changed on first login" class="w-full px-3 py-2.5 text-sm">
+      </div>
+      <div class="flex gap-3 pt-1">
+        <button onclick="closeAdminModal()" class="flex-1 py-3 rounded-xl text-sm text-stone-400" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">Cancel</button>
+        <button onclick="addAdmin()" class="flex-1 py-3 rounded-xl text-sm font-semibold text-stone-900" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Create Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Sidebar ── */
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
+function checkBtn(){document.getElementById('menu-btn').style.display=window.innerWidth>=1024?'none':'flex'}
+checkBtn();window.addEventListener('resize',checkBtn);
+
+/* ── Tabs ── */
+const tabs=['general','notifications','accounts','security','danger'];
+function setTab(id,btn){
+  tabs.forEach(t=>{document.getElementById('tab-'+t).classList.add('hidden')});
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('tab-'+id).classList.remove('hidden');
+  btn.classList.add('on');
+}
+
+/* ── Admin accounts data ── */
+let admins=[
+  {id:1,name:'Rahul Sharma',role:'Super Admin',email:'rahul@readspace.in',branch:'All Branches',active:true},
+  {id:2,name:'Priya Mehta',role:'Branch Manager',email:'priya@readspace.in',branch:'Nagpur Main',active:true},
+  {id:3,name:'Suresh Kadam',role:'Staff',email:'suresh@readspace.in',branch:'Civil Lines',active:true},
+  {id:4,name:'Anita Rao',role:'Staff',email:'anita@readspace.in',branch:'Sitabuldi',active:false},
+];
+
+function renderAdmins(){
+  const el=document.getElementById('admins-list');
+  el.innerHTML=admins.map(a=>`
+    <div class="card p-4 flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">${a.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-0.5">
+          <span class="text-sm font-semibold text-stone-200">${a.name}</span>
+          <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(201,168,76,0.1);color:#e8b84b;border:1px solid rgba(201,168,76,0.2)">${a.role}</span>
+          ${!a.active?'<span class="text-xs px-2 py-0.5 rounded-full bg-r">Inactive</span>':''}
+        </div>
+        <div class="text-xs text-stone-500">${a.email} · ${a.branch}</div>
+      </div>
+      <div class="flex gap-1.5 flex-shrink-0">
+        <button onclick="toggleAdmin(${a.id})" class="text-xs px-2 py-1 rounded-lg text-stone-500 hover:text-stone-200" style="background:rgba(255,255,255,0.05)">${a.active?'Disable':'Enable'}</button>
+        ${a.id!==1?`<button onclick="deleteAdmin(${a.id})" class="text-xs px-2 py-1 rounded-lg text-red-400" style="background:rgba(239,68,68,0.08)">Remove</button>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleAdmin(id){const a=admins.find(x=>x.id===id);a.active=!a.active;renderAdmins();toast(a.active?'Account enabled':'Account disabled')}
+function deleteAdmin(id){admins=admins.filter(a=>a.id!==id);renderAdmins();toast('Admin removed')}
+
+function openAdminModal(){document.getElementById('admin-modal').classList.remove('hidden');document.body.style.overflow='hidden'}
+function closeAdminModal(){document.getElementById('admin-modal').classList.add('hidden');document.body.style.overflow=''}
+function addAdmin(){
+  const name=document.getElementById('a-name').value.trim();
+  if(!name){toast('Name is required','err');return;}
+  admins.push({id:Date.now(),name,role:document.getElementById('a-role').value,email:document.getElementById('a-email').value,branch:document.getElementById('a-branch').value,active:true});
+  closeAdminModal();renderAdmins();toast('Admin account created!');
+}
+
+/* ── Save & danger ── */
+function saveSettings(){toast('Settings saved!')}
+function confirmDanger(msg){if(confirm(msg)){toast('Action completed')}}
+
+/* ── Toast ── */
+function toast(msg,type){const t=document.createElement('div');t.className='fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-6 sm:translate-x-0 px-5 py-3 rounded-xl text-sm font-semibold z-50 shadow-lg';if(type==='err'){t.style='background:#7f1d1d;color:#fca5a5;border:1px solid rgba(239,68,68,0.3)'}else{t.style='background:linear-gradient(135deg,#c9a84c,#e8b84b);color:#12122a'}t.textContent=(type==='err'?'✕ ':'✓ ')+msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}
+
+renderAdmins();
+</script>
+</body>
+</html>

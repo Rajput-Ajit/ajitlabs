@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReadSpace – Fees & Payments</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}body{font-family:'DM Sans',sans-serif;background:#0e0e22;color:#e2e8f0;margin:0}.display{font-family:'Playfair Display',serif}
+  #sidebar{position:fixed;top:0;left:0;height:100%;width:256px;background:#12122a;border-right:1px solid rgba(201,168,76,0.15);z-index:50;transform:translateX(-100%);transition:transform 0.3s ease;display:flex;flex-direction:column;overflow-y:auto}
+  #sidebar.open{transform:translateX(0)}#overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:49;display:none}#overlay.show{display:block}
+  @media(min-width:1024px){#sidebar{transform:translateX(0)}#overlay{display:none!important}#main{margin-left:256px}#menu-btn{display:none}}
+  .card{background:#1a1a35;border:1px solid rgba(255,255,255,0.06);border-radius:16px}
+  .nl{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;margin-bottom:2px;font-size:14px;font-weight:500;color:#94a3b8;transition:all 0.2s;text-decoration:none}
+  .nl:hover{background:rgba(255,255,255,0.05);color:#e2e8f0}.nl.on{background:linear-gradient(135deg,#c9a84c,#e8b84b);color:#12122a;font-weight:700}
+  .topbar{background:#12122a;border-bottom:1px solid rgba(201,168,76,0.1);position:sticky;top:0;z-index:40}
+  .bg-g{border-radius:999px;padding:2px 10px;font-size:11px;font-weight:600;background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.2)}
+  .bg-r{border-radius:999px;padding:2px 10px;font-size:11px;font-weight:600;background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
+  .bg-a{border-radius:999px;padding:2px 10px;font-size:11px;font-weight:600;background:rgba(201,168,76,0.15);color:#e8b84b;border:1px solid rgba(201,168,76,0.2)}
+  input,select{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;border-radius:10px}
+  input::placeholder{color:#475569}input:focus,select:focus{outline:none;border-color:#c9a84c}select option{background:#1a1a35}
+  table{border-collapse:separate;border-spacing:0}
+  th{background:#12122a;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;font-weight:600}
+  tr:hover td{background:rgba(255,255,255,0.02)}td{border-bottom:1px solid rgba(255,255,255,0.04)}
+  .pb{background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(4px);z-index:60;display:flex;align-items:flex-end;justify-content:center}
+  @media(min-width:640px){.modal-bg{align-items:center;padding:16px}}
+  .modal-card{background:#1a1a35;border:1px solid rgba(201,168,76,0.3);border-radius:20px 20px 0 0;width:100%;max-width:440px;padding:20px;position:relative;max-height:92vh;overflow-y:auto}
+  @media(min-width:640px){.modal-card{border-radius:20px;padding:24px}}
+  /* payment cards on mobile */
+  .pay-card{background:#1a1a35;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px}
+  .desktop-table{display:none}
+  @media(min-width:768px){.desktop-table{display:block}.mobile-pays{display:none}}
+  ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:#0e0e22}::-webkit-scrollbar-thumb{background:#c9a84c44;border-radius:2px}
+</style>
+</head>
+<body>
+<!-- 🎮 GAME STYLE LOADER -->
+<div id="game-loader">
+  <div class="glow-bg"></div>
+
+  <div class="loader-ui">
+
+    <div class="energy-core">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="core">⚡</div>
+    </div>
+
+    <h2 class="title">ReadSpace Engine</h2>
+    <p id="loader-msg">Initializing system...</p>
+
+    <div class="scan-bar">
+      <span></span>
+    </div>
+
+  </div>
+
+  <div class="particles"></div>
+</div>
+
+<style>
+#game-loader{
+  position:fixed;
+  inset:0;
+  z-index:999999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(201,168,76,.12), transparent 40%),
+    radial-gradient(circle at 70% 70%, rgba(59,130,246,.12), transparent 40%),
+    #080814;
+  overflow:hidden;
+  transition:opacity .7s ease, visibility .7s ease;
+}
+
+#game-loader.hide{
+  opacity:0;
+  visibility:hidden;
+}
+
+/* background glow */
+.glow-bg{
+  position:absolute;
+  width:500px;
+  height:500px;
+  border-radius:50%;
+  background: radial-gradient(circle,#c9a84c33,#3b82f633,transparent 70%);
+  filter: blur(80px);
+  animation: float 6s ease-in-out infinite alternate;
+}
+
+@keyframes float{
+  from{transform:translate(-60px,-60px)}
+  to{transform:translate(60px,60px)}
+}
+
+/* UI card */
+.loader-ui{
+  position:relative;
+  text-align:center;
+  padding:40px 30px;
+  border-radius:24px;
+  background:rgba(15,15,30,.7);
+  border:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(16px);
+  box-shadow:0 20px 80px rgba(0,0,0,.5);
+}
+
+/* ENERGY CORE */
+.energy-core{
+  position:relative;
+  width:120px;
+  height:120px;
+  margin:0 auto 25px;
+}
+
+.ring{
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  border:2px solid transparent;
+}
+
+.r1{
+  border-top-color:#c9a84c;
+  border-right-color:#3b82f6;
+  animation:spin 1.5s linear infinite;
+}
+
+.r2{
+  inset:14px;
+  border-left-color:#e8b84b;
+  border-bottom-color:rgba(255,255,255,.2);
+  animation:spinReverse 1.2s linear infinite;
+}
+
+.r3{
+  inset:28px;
+  border-top-color:rgba(255,255,255,.6);
+  animation:spin 0.8s linear infinite;
+}
+
+.core{
+  position:absolute;
+  inset:40px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  border-radius:50%;
+  background:rgba(255,255,255,.05);
+  box-shadow:0 0 25px rgba(201,168,76,.4);
+  animation:pulse 1.5s infinite;
+}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spinReverse{to{transform:rotate(-360deg)}}
+@keyframes pulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.15)}
+}
+
+/* text */
+.title{
+  color:#f8fafc;
+  font-size:26px;
+  font-family:'Playfair Display',serif;
+}
+
+#loader-msg{
+  font-size:13px;
+  color:#94a3b8;
+  margin-top:6px;
+  transition:opacity .3s;
+}
+
+/* scan bar */
+.scan-bar{
+  margin-top:18px;
+  height:4px;
+  background:rgba(255,255,255,.08);
+  overflow:hidden;
+  border-radius:999px;
+}
+
+.scan-bar span{
+  display:block;
+  width:30%;
+  height:100%;
+  background:linear-gradient(90deg,#c9a84c,#3b82f6);
+  animation:scan 1.6s infinite;
+}
+
+@keyframes scan{
+  0%{transform:translateX(-100%)}
+  100%{transform:translateX(300%)}
+}
+
+/* particles */
+.particles span{
+  position:absolute;
+  width:5px;
+  height:5px;
+  background:rgba(255,255,255,.2);
+  border-radius:50%;
+  animation:move 10s linear infinite;
+}
+
+@keyframes move{
+  from{transform:translateY(100vh)}
+  to{transform:translateY(-10vh)}
+}
+</style>
+
+<script>
+(function(){
+  const loader = document.getElementById('game-loader');
+  const msg = document.getElementById('loader-msg');
+
+  // 🎯 dynamic messages (game feel)
+  const messages = [
+    "Initializing system...",
+    "Loading engine modules...",
+    "Syncing data streams...",
+    "Calibrating dashboard...",
+    "Almost ready..."
+  ];
+
+  let i = 0;
+  const interval = setInterval(()=>{
+    msg.style.opacity = 0;
+    setTimeout(()=>{
+      msg.textContent = messages[i % messages.length];
+      msg.style.opacity = 1;
+      i++;
+    },300);
+  },1500);
+
+  // particles
+  const container = document.querySelector('.particles');
+  for(let i=0;i<40;i++){
+    const p = document.createElement('span');
+    p.style.left = Math.random()*100+'%';
+    p.style.animationDuration = (6 + Math.random()*6)+'s';
+    p.style.opacity = Math.random();
+    container.appendChild(p);
+  }
+
+  // 🎮 GLOBAL CONTROL
+  window.Loader = {
+    stop: function(){
+      clearInterval(interval);
+
+      loader.classList.add('hide');
+
+      setTimeout(()=>{
+        loader.remove();
+      },700);
+    }
+  };
+
+})();
+</script>
+
+
+
+<div id="overlay" onclick="closeSidebar()"></div>
+<aside id="sidebar">
+  <div class="p-5 border-b border-amber-900/20 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center text-base font-black text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">R</div>
+      <div><div class="display text-amber-300 font-bold text-lg leading-none">ReadSpace</div><div class="text-stone-500 text-xs">Admin Panel</div></div>
+    </div>
+  </div>
+  <div class="px-4 py-3 border-b border-amber-900/10 flex-shrink-0">
+    <select class="w-full text-xs px-3 py-2 rounded-lg text-amber-300" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2)">
+      <option>🏛 Nagpur Main Branch</option><option>🏛 Civil Lines</option><option>🏛 Sitabuldi</option>
+    </select>
+  </div>
+  <nav class="p-3 flex-1">
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-1">Main</div>
+    <a href="admin-dashboard.html" class="nl">⊞ <span>Dashboard</span></a>
+    <a href="admin-halls.html" class="nl">🏛 <span>Manage Halls</span></a>
+    <a href="admin-seats.html" class="nl">🪑 <span>Seat Manager</span></a>
+    <a href="admin-students.html" class="nl">👥 <span>Students</span></a>
+    <a href="admin-fees.html" class="nl on">💳 <span>Fees & Payments</span></a>
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-4">Config</div>
+    <a href="admin-branches.html" class="nl">📍 <span>Branches</span></a><a href="admin-shifts.html" class="nl">⏰ <span>Shift Timings</span></a><a href="admin-subscription.html" class="nl">⭐ <span>Subscription</span></a><a href="#" class="nl">⚙ <span>Settings</span></a>
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-4">My Plan</div>
+    <a href="saas-overview.html" class="nl">🚀 <span>Plan Overview</span></a>
+    <a href="saas-billing.html" class="nl">🧾 <span>Billing &amp; Invoices</span></a>
+    <a href="saas-upgrade.html" class="nl">⬆ <span>Upgrade Plan</span></a>
+    <a href="saas-usage.html" class="nl">📊 <span>Usage &amp; Limits</span></a>
+  </nav>
+  <div class="p-4 border-t border-amber-900/10 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">RS</div>
+      <div class="flex-1 min-w-0"><div class="text-xs text-stone-200 font-medium truncate">Rahul Sharma</div><div class="text-xs text-stone-500">Super Admin</div></div>
+      <a href="admin-login.html" class="text-stone-500 hover:text-red-400 text-lg">⏻</a>
+    </div>
+  </div>
+</aside>
+
+<div id="main" class="flex flex-col min-h-screen">
+  <header class="topbar px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
+    <button id="menu-btn" onclick="openSidebar()" class="w-9 h-9 flex items-center justify-center rounded-xl text-amber-400 flex-shrink-0">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+    </button>
+    <div class="flex-1 min-w-0">
+      <div class="display text-base sm:text-xl text-stone-100 font-bold">Fees & Payments</div>
+      <div class="text-xs text-stone-500 hidden sm:block">Revenue, dues & payment history</div>
+    </div>
+    <button onclick="document.getElementById('pay-modal').classList.remove('hidden');document.body.style.overflow='hidden'" class="text-xs px-3 sm:px-4 py-2 rounded-xl font-semibold text-stone-900 whitespace-nowrap" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">+ Record</button>
+  </header>
+
+  <main class="flex-1 p-4 sm:p-6 space-y-4">
+    <!-- Stats: 2×2 mobile, 4 desktop -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="card p-4 sm:p-5">
+        <div class="text-xs text-stone-500 uppercase tracking-wider mb-1">Monthly Revenue</div>
+        <div class="display text-2xl sm:text-3xl font-bold text-stone-100">₹1.24L</div>
+        <div class="text-xs text-green-400 mt-1">↑ 17% vs last month</div>
+      </div>
+      <div class="card p-4 sm:p-5">
+        <div class="text-xs text-stone-500 uppercase tracking-wider mb-1">Collected</div>
+        <div class="display text-2xl sm:text-3xl font-bold text-green-400">₹1.16L</div>
+        <div class="text-xs text-stone-500 mt-1">195 paid</div>
+      </div>
+      <div class="card p-4 sm:p-5">
+        <div class="text-xs text-stone-500 uppercase tracking-wider mb-1">Pending</div>
+        <div class="display text-2xl sm:text-3xl font-bold text-red-400">₹8,400</div>
+        <div class="text-xs text-red-400 mt-1">⚠ 8 overdue</div>
+      </div>
+      <div class="card p-4 sm:p-5">
+        <div class="text-xs text-stone-500 uppercase tracking-wider mb-1">Collection</div>
+        <div class="display text-2xl sm:text-3xl font-bold text-amber-400">93.5%</div>
+        <div class="pb h-1.5 mt-2"><div class="h-full rounded-full bg-amber-400" style="width:93.5%"></div></div>
+      </div>
+    </div>
+
+    <!-- Charts: stacked on mobile -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="card p-4 sm:p-5 lg:col-span-2">
+        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div><div class="font-semibold text-stone-200 text-sm sm:text-base">Revenue Trend</div><div class="text-xs text-stone-500">Monthly collection vs expected</div></div>
+        </div>
+        <div class="relative" style="height:160px"><canvas id="revChart"></canvas></div>
+      </div>
+      <div class="card p-4 sm:p-5">
+        <div class="font-semibold text-stone-200 text-sm sm:text-base mb-1">Payment Methods</div>
+        <div class="text-xs text-stone-500 mb-3">This month</div>
+        <div class="flex items-center gap-4">
+          <div class="flex-shrink-0" style="width:110px;height:110px;position:relative"><canvas id="payChart"></canvas></div>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded" style="background:#c9a84c;display:inline-block"></span><span class="text-stone-400">Cash</span><span class="text-stone-200 font-bold ml-auto pl-2">42%</span></div>
+            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded" style="background:#3b82f6;display:inline-block"></span><span class="text-stone-400">UPI</span><span class="text-stone-200 font-bold ml-auto pl-2">38%</span></div>
+            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded" style="background:#a78bfa;display:inline-block"></span><span class="text-stone-400">Bank</span><span class="text-stone-200 font-bold ml-auto pl-2">20%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overdue alerts -->
+    <div class="card p-4 sm:p-5">
+      <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <div class="font-semibold text-stone-200 text-sm sm:text-base">⚠ Overdue Payments</div>
+        <button class="text-xs px-3 py-2 rounded-xl text-amber-400 font-semibold" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2)">Send All Reminders</button>
+      </div>
+      <!-- Scrollable on mobile -->
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[500px]">
+          <thead><tr>
+            <th class="px-3 sm:px-4 py-2.5 text-left">Student</th>
+            <th class="px-3 sm:px-4 py-2.5 text-left">Seat</th>
+            <th class="px-3 sm:px-4 py-2.5 text-left">Amount</th>
+            <th class="px-3 sm:px-4 py-2.5 text-left">Overdue</th>
+            <th class="px-3 sm:px-4 py-2.5 text-left">Actions</th>
+          </tr></thead>
+          <tbody id="dues-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Payment History -->
+    <div class="card">
+      <div class="p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 flex-wrap" style="border-bottom:1px solid rgba(255,255,255,0.06)">
+        <div class="font-semibold text-stone-200 text-sm sm:text-base">Payment History</div>
+        <div class="flex gap-2 flex-wrap sm:ml-3">
+          <input type="text" placeholder="🔍 Search…" class="px-3 py-2 text-sm flex-1 sm:w-40">
+          <select class="px-3 py-2 text-sm"><option>This Month</option><option>Last Month</option><option>Last 3 Months</option></select>
+          <select class="px-3 py-2 text-sm"><option>All Status</option><option>Paid</option><option>Pending</option></select>
+        </div>
+        <button class="sm:ml-auto text-xs px-3 py-2 rounded-xl text-stone-400 hover:text-amber-400 self-start sm:self-center" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">📋 Export</button>
+      </div>
+
+      <!-- Mobile payment cards -->
+      <div class="mobile-pays p-3 space-y-2" id="mobile-pays"></div>
+
+      <!-- Desktop table -->
+      <div class="desktop-table overflow-x-auto">
+        <table class="w-full">
+          <thead><tr>
+            <th class="px-4 py-3 text-left">Student</th>
+            <th class="px-4 py-3 text-left">Hall & Seat</th>
+            <th class="px-4 py-3 text-left">Amount</th>
+            <th class="px-4 py-3 text-left">Method</th>
+            <th class="px-4 py-3 text-left">Date</th>
+            <th class="px-4 py-3 text-left">Status</th>
+          </tr></thead>
+          <tbody id="pay-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Record Payment Modal -->
+<div id="pay-modal" class="modal-bg hidden">
+  <div class="modal-card">
+    <div class="w-10 h-1 bg-stone-600 rounded-full mx-auto mb-4 sm:hidden"></div>
+    <button onclick="document.getElementById('pay-modal').classList.add('hidden');document.body.style.overflow=''" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-stone-400 hover:text-stone-200 rounded-lg hover:bg-white/10 text-xl">✕</button>
+    <h3 class="display text-xl text-stone-100 font-bold mb-5">Record Payment</h3>
+    <div class="space-y-3">
+      <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Student Name</label><input type="text" placeholder="Search student…" class="w-full px-3 py-2.5 text-sm"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Amount</label><input type="number" placeholder="₹1500" class="w-full px-3 py-2.5 text-sm"></div>
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Month</label><select class="w-full px-3 py-2.5 text-sm"><option>March 2026</option><option>April 2026</option></select></div>
+      </div>
+      <div>
+        <label class="text-xs text-stone-400 uppercase tracking-wider mb-2 block">Payment Method</label>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl cursor-pointer text-sm text-amber-300 border" style="border-color:rgba(201,168,76,0.3);background:rgba(201,168,76,0.1)"><input type="radio" name="m" checked class="accent-amber-400"> Cash</label>
+          <label class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl cursor-pointer text-sm text-stone-400 border" style="border-color:rgba(255,255,255,0.1)"><input type="radio" name="m" class="accent-amber-400"> UPI</label>
+          <label class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl cursor-pointer text-sm text-stone-400 border" style="border-color:rgba(255,255,255,0.1)"><input type="radio" name="m" class="accent-amber-400"> Bank</label>
+        </div>
+      </div>
+      <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Notes</label><input type="text" placeholder="Optional…" class="w-full px-3 py-2.5 text-sm"></div>
+      <div class="flex gap-3">
+        <button onclick="document.getElementById('pay-modal').classList.add('hidden');document.body.style.overflow=''" class="flex-1 py-3 rounded-xl text-sm text-stone-400" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">Cancel</button>
+        <button onclick="recordPay()" class="flex-1 py-3 rounded-xl text-sm font-semibold text-stone-900" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Record & Receipt</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
+function checkBtn(){document.getElementById('menu-btn').style.display=window.innerWidth>=1024?'none':'flex'}
+checkBtn();window.addEventListener('resize',checkBtn);
+
+new Chart(document.getElementById('revChart').getContext('2d'),{
+  type:'line',data:{labels:['Oct','Nov','Dec','Jan','Feb','Mar'],datasets:[
+    {label:'Expected',data:[100000,110000,120000,105000,130000,140000],borderColor:'rgba(201,168,76,0.4)',borderDash:[5,5],pointRadius:0,fill:false},
+    {label:'Collected',data:[82000,95000,110000,88000,118000,124000],borderColor:'#c9a84c',backgroundColor:'rgba(201,168,76,0.08)',fill:true,tension:0.4,pointBackgroundColor:'#c9a84c',pointRadius:4}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10},boxWidth:12}}},scales:{x:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#64748b',font:{size:10},callback:v=>'₹'+v/1000+'k'},grid:{color:'rgba(255,255,255,0.04)'}}}}
+});
+new Chart(document.getElementById('payChart').getContext('2d'),{
+  type:'doughnut',data:{labels:['Cash','UPI','Bank'],datasets:[{data:[42,38,20],backgroundColor:['#c9a84c','#3b82f6','#a78bfa'],borderWidth:0}]},
+  options:{cutout:'68%',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+});
+
+const dues=[
+  {n:'Vikram Singh',seat:'A-15',amt:'₹1,500',days:5},{n:'Anita Bhende',seat:'B-22',amt:'₹2,000',days:8},
+  {n:'Suresh Kamble',seat:'A-31',amt:'₹1,200',days:12},{n:'Pooja Wankhede',seat:'C-8',amt:'₹1,800',days:3},
+  {n:'Rajesh Gupta',seat:'B-44',amt:'₹1,500',days:18},
+];
+document.getElementById('dues-tbl').innerHTML=dues.map(d=>`<tr>
+  <td class="px-3 sm:px-4 py-3 text-sm text-stone-200">${d.n}</td>
+  <td class="px-3 sm:px-4 py-3"><span class="font-mono text-amber-400 text-sm">${d.seat}</span></td>
+  <td class="px-3 sm:px-4 py-3 text-red-400 font-semibold text-sm">${d.amt}</td>
+  <td class="px-3 sm:px-4 py-3"><span class="bg-r">${d.days}d</span></td>
+  <td class="px-3 sm:px-4 py-3">
+    <div class="flex gap-1">
+      <button class="text-xs px-2 py-1.5 rounded-lg text-amber-400" style="background:rgba(201,168,76,0.08)">💬</button>
+      <button class="text-xs px-2 py-1.5 rounded-lg text-green-400" style="background:rgba(34,197,94,0.08)">✓ Paid</button>
+    </div>
+  </td>
+</tr>`).join('');
+
+const NAMES=['Priya D.','Rohan J.','Amit K.','Sneha P.','Meera G.','Ajay P.','Neha S.','Ravi K.','Kavita J.','Deepak V.'];
+const METHODS=['Cash','UPI','Bank Transfer'];
+const HALLS=['Hall A','Hall B','Hall C'];
+const payData=Array.from({length:15},(_,i)=>({
+  n:NAMES[i%NAMES.length],hall:HALLS[i%3],seat:`A-${i+1}`,amt:[1200,1500,1800,2000][i%4],
+  method:METHODS[i%3],date:`${i+1} Mar 2026`,paid:Math.random()>0.15
+}));
+
+// Mobile payment cards
+document.getElementById('mobile-pays').innerHTML=payData.map(p=>`
+  <div class="pay-card flex items-center gap-3">
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-sm font-medium text-stone-200 truncate">${p.n}</span>
+        <span class="${p.paid?'bg-g':'bg-r'}">${p.paid?'Paid':'Pending'}</span>
+      </div>
+      <div class="flex items-center gap-3 text-xs text-stone-400">
+        <span>${p.hall} · <span class="font-mono text-amber-400">${p.seat}</span></span>
+        <span>₹${p.amt}</span>
+        <span>${p.method}</span>
+        <span class="ml-auto">${p.date}</span>
+      </div>
+    </div>
+  </div>`).join('');
+
+document.getElementById('pay-tbl').innerHTML=payData.map(p=>`<tr>
+  <td class="px-4 py-3 text-sm text-stone-200">${p.n}</td>
+  <td class="px-4 py-3 text-sm text-stone-400">${p.hall} · <span class="font-mono text-amber-400">${p.seat}</span></td>
+  <td class="px-4 py-3 text-sm text-stone-200 font-medium">₹${p.amt}</td>
+  <td class="px-4 py-3 text-sm text-stone-400">${p.method}</td>
+  <td class="px-4 py-3 text-sm text-stone-400">${p.date}</td>
+  <td class="px-4 py-3"><span class="${p.paid?'bg-g':'bg-r'}">${p.paid?'Paid':'Pending'}</span></td>
+</tr>`).join('');
+
+function recordPay(){document.getElementById('pay-modal').classList.add('hidden');document.body.style.overflow='';toast('Payment recorded!')}
+function toast(msg){const t=document.createElement('div');t.className='fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-6 sm:translate-x-0 px-5 py-3 rounded-xl text-sm font-semibold text-stone-900 z-50 shadow-lg';t.style='background:linear-gradient(135deg,#c9a84c,#e8b84b)';t.textContent='✓ '+msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}
+</script>
+</body>
+</html>

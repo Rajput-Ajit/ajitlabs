@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReadSpace – Seat Manager</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:#0e0e22;color:#e2e8f0;margin:0}
+  .display{font-family:'Playfair Display',serif}
+  #sidebar{position:fixed;top:0;left:0;height:100%;width:256px;background:#12122a;border-right:1px solid rgba(201,168,76,0.15);z-index:50;transform:translateX(-100%);transition:transform 0.3s ease;display:flex;flex-direction:column;overflow-y:auto}
+  #sidebar.open{transform:translateX(0)}
+  #overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:49;display:none}
+  #overlay.show{display:block}
+  @media(min-width:1024px){#sidebar{transform:translateX(0)}#overlay{display:none!important}#main{margin-left:256px}#menu-btn{display:none}}
+  .card{background:#1a1a35;border:1px solid rgba(255,255,255,0.06);border-radius:16px}
+  .nl{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;margin-bottom:2px;font-size:14px;font-weight:500;color:#94a3b8;transition:all 0.2s;text-decoration:none}
+  .nl:hover{background:rgba(255,255,255,0.05);color:#e2e8f0}
+  .nl.on{background:linear-gradient(135deg,#c9a84c,#e8b84b);color:#12122a;font-weight:700}
+  .topbar{background:#12122a;border-bottom:1px solid rgba(201,168,76,0.1);position:sticky;top:0;z-index:40}
+  /* Seat sizes – responsive */
+  .seat{border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;transition:all 0.18s;border:2px solid transparent;position:relative;user-select:none;flex-shrink:0;font-size:10px;width:36px;height:36px}
+  @media(min-width:640px){.seat{width:42px;height:42px;font-size:11px}}
+  @media(min-width:1024px){.seat{width:46px;height:46px;font-size:12px}}
+  .seat:hover{transform:scale(1.12);z-index:10}
+  .seat.empty{background:#1e3a5f;border-color:#2563eb;color:#60a5fa}
+  .seat.occ{background:#450a0a;border-color:#ef4444;color:#fca5a5}
+  .seat.morn{background:#1e1b4b;border-color:#818cf8;color:#a5b4fc}
+  .seat.eve{background:#431407;border-color:#f97316;color:#fdba74}
+  .seat.half{background:#422006;border-color:#f59e0b;color:#fcd34d}
+  .seat.selected{box-shadow:0 0 0 3px #c9a84c;transform:scale(1.1)}
+  .seatdot{position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%}
+  .fb{padding:6px 12px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;border:1px solid rgba(255,255,255,0.1);color:#94a3b8;white-space:nowrap}
+  .fb.on{border-color:#c9a84c;color:#e8b84b;background:rgba(201,168,76,0.1)}
+  .fb:hover{border-color:#c9a84c44}
+  input,select{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;border-radius:10px}
+  input::placeholder{color:#475569}
+  input:focus,select:focus{outline:none;border-color:#c9a84c}
+  select option{background:#1a1a35}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(4px);z-index:60;display:flex;align-items:flex-end;justify-content:center;padding:0}
+  @media(min-width:640px){.modal-bg{align-items:center;padding:16px}}
+  .modal-card{background:#1a1a35;border:1px solid rgba(201,168,76,0.3);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px;position:relative;max-height:90vh;overflow-y:auto}
+  @media(min-width:640px){.modal-card{border-radius:20px;max-width:440px}}
+  .pb{background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden}
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:#0e0e22}
+  ::-webkit-scrollbar-thumb{background:#c9a84c44;border-radius:2px}
+</style>
+</head>
+<body>
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║   READING HALL LOADER — DROP-IN SNIPPET                     ║
+  ║   Copy everything below and paste into your <body>          ║
+  ║   To stop loader call:  RHLoader.stop()                     ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+
+<!-- ① PASTE THIS DIV anywhere inside <body> -->
+<div id="rhl-overlay">
+  <canvas id="rhl-particles"></canvas>
+  <div class="rhl-grid"></div>
+  <div class="rhl-hexagons" id="rhl-hexagons"></div>
+  <div class="rhl-scanline"></div>
+  <div class="rhl-corner rhl-tl"></div>
+  <div class="rhl-corner rhl-tr"></div>
+  <div class="rhl-corner rhl-bl"></div>
+  <div class="rhl-corner rhl-br"></div>
+  <div class="rhl-scene">
+    <div class="rhl-book-wrap">
+      <div class="rhl-ring rhl-ring-1"></div>
+      <div class="rhl-ring rhl-ring-2"></div>
+      <div class="rhl-ring rhl-ring-3"></div>
+      <svg class="rhl-book-svg" width="44" height="44" viewBox="0 0 44 44" fill="none">
+        <rect x="2" y="6" width="20" height="32" rx="2" fill="#6c63ff33" stroke="#6c63ff" stroke-width="1.5"/>
+        <rect x="22" y="6" width="20" height="32" rx="2" fill="#00d4ff22" stroke="#00d4ff" stroke-width="1.5"/>
+        <line x1="22" y1="6" x2="22" y2="38" stroke="#ffffff33" stroke-width="1"/>
+        <line x1="6"  y1="14" x2="18" y2="14" stroke="#6c63ff88" stroke-width="1"/>
+        <line x1="6"  y1="18" x2="18" y2="18" stroke="#6c63ff88" stroke-width="1"/>
+        <line x1="6"  y1="22" x2="18" y2="22" stroke="#6c63ff88" stroke-width="1"/>
+        <line x1="6"  y1="26" x2="14" y2="26" stroke="#6c63ff88" stroke-width="1"/>
+        <line x1="26" y1="14" x2="38" y2="14" stroke="#00d4ff88" stroke-width="1"/>
+        <line x1="26" y1="18" x2="38" y2="18" stroke="#00d4ff88" stroke-width="1"/>
+        <line x1="26" y1="22" x2="38" y2="22" stroke="#00d4ff88" stroke-width="1"/>
+        <line x1="26" y1="26" x2="34" y2="26" stroke="#00d4ff88" stroke-width="1"/>
+        <circle cx="22" cy="4" r="3" fill="#ff6b9d" opacity="0.9"/>
+      </svg>
+    </div>
+    <div class="rhl-title-wrap">
+      <div class="rhl-title">Reading Hall</div>
+      <div class="rhl-subtitle">Management System</div>
+    </div>
+    <div class="rhl-progress-wrap">
+      <div class="rhl-bar-track">
+        <div class="rhl-bar-fill" id="rhl-bar">
+          <div class="rhl-bar-shimmer"></div>
+        </div>
+      </div>
+      <div class="rhl-progress-info">
+        <span class="rhl-status" id="rhl-status">Initializing...</span>
+        <span class="rhl-pct"    id="rhl-pct">0%</span>
+      </div>
+    </div>
+    <div class="rhl-dots">
+      <div class="rhl-dot"></div>
+      <div class="rhl-dot"></div>
+      <div class="rhl-dot"></div>
+      <div class="rhl-dot"></div>
+      <div class="rhl-dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ② PASTE THIS STYLE block inside <head> or just before </body> -->
+<style>
+/* ── all selectors prefixed with rhl- so nothing leaks ── */
+#rhl-overlay *,#rhl-overlay *::before,#rhl-overlay *::after{box-sizing:border-box;margin:0;padding:0}
+#rhl-overlay{
+  position:fixed;inset:0;z-index:999999;
+  background:#0a0a0f;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .8s ease,visibility .8s ease;
+  overflow:hidden;
+}
+#rhl-overlay.rhl-hidden{opacity:0;visibility:hidden;pointer-events:none}
+
+/* particles canvas */
+#rhl-particles{position:absolute;inset:0;width:100%;height:100%}
+
+/* grid */
+.rhl-grid{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(108,99,255,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(108,99,255,.04) 1px,transparent 1px);
+  background-size:60px 60px;
+}
+
+/* hex drifters */
+.rhl-hexagons{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.rhl-hex{position:absolute;opacity:.06;animation:rhl-hex-drift linear infinite}
+@keyframes rhl-hex-drift{
+  0%  {transform:translateY(110vh) rotate(0deg);opacity:0}
+  10% {opacity:.06}
+  90% {opacity:.06}
+  100%{transform:translateY(-10vh) rotate(360deg);opacity:0}
+}
+
+/* scanline */
+.rhl-scanline{
+  position:absolute;left:0;right:0;height:2px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,#6c63ff44,#00d4ff88,#6c63ff44,transparent);
+  animation:rhl-scan 4s linear infinite;
+}
+@keyframes rhl-scan{
+  0%  {top:0;opacity:0}5%{opacity:1}95%{opacity:1}100%{top:100%;opacity:0}
+}
+
+/* corners */
+.rhl-corner{
+  position:absolute;width:30px;height:30px;
+  border-color:#6c63ff;border-style:solid;opacity:.6;
+  animation:rhl-corner-pulse 2s ease-in-out infinite;
+}
+.rhl-tl{top:20px;left:20px;border-width:2px 0 0 2px;border-radius:4px 0 0 0}
+.rhl-tr{top:20px;right:20px;border-width:2px 2px 0 0;border-radius:0 4px 0 0}
+.rhl-bl{bottom:20px;left:20px;border-width:0 0 2px 2px;border-radius:0 0 0 4px}
+.rhl-br{bottom:20px;right:20px;border-width:0 2px 2px 0;border-radius:0 0 4px 0}
+@keyframes rhl-corner-pulse{
+  0%,100%{opacity:.3;border-color:#6c63ff}
+  50%    {opacity:.8;border-color:#00d4ff}
+}
+
+/* scene */
+.rhl-scene{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;align-items:center;gap:40px;
+  font-family:'Segoe UI',system-ui,sans-serif;
+}
+
+/* book + rings */
+.rhl-book-wrap{position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center}
+.rhl-ring{position:absolute;border-radius:50%;border:1.5px solid transparent;animation:rhl-spin linear infinite}
+.rhl-ring-1{width:120px;height:120px;border-top-color:#6c63ff;border-right-color:#6c63ff;animation-duration:2.4s;box-shadow:0 0 18px #6c63ff44}
+.rhl-ring-2{width:96px;height:96px;border-bottom-color:#00d4ff;border-left-color:#00d4ff;animation-duration:1.8s;animation-direction:reverse;box-shadow:0 0 14px #00d4ff33}
+.rhl-ring-3{width:72px;height:72px;border-top-color:#ff6b9d;border-right-color:#ff6b9d;animation-duration:1.2s;box-shadow:0 0 10px #ff6b9d33}
+@keyframes rhl-spin{to{transform:rotate(360deg)}}
+.rhl-book-svg{position:relative;z-index:2;animation:rhl-float 3s ease-in-out infinite;filter:drop-shadow(0 0 12px #6c63ff88)}
+@keyframes rhl-float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.04)}}
+
+/* title */
+.rhl-title-wrap{text-align:center;display:flex;flex-direction:column;gap:8px}
+.rhl-title{
+  font-size:28px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  background:linear-gradient(90deg,#6c63ff,#00d4ff,#ff6b9d,#6c63ff);
+  background-size:300% 100%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:rhl-grad 3s linear infinite;
+}
+@keyframes rhl-grad{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+.rhl-subtitle{
+  font-size:12px;letter-spacing:5px;text-transform:uppercase;color:#4a4a6a;
+  animation:rhl-sub-pulse 2s ease-in-out infinite;
+}
+@keyframes rhl-sub-pulse{0%,100%{opacity:.5}50%{opacity:1;color:#7a7aaa}}
+
+/* progress */
+.rhl-progress-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;width:320px}
+.rhl-bar-track{width:100%;height:3px;background:#1a1a2e;border-radius:99px;overflow:hidden;position:relative}
+.rhl-bar-fill{
+  height:100%;width:0%;border-radius:99px;
+  background:linear-gradient(90deg,#6c63ff,#00d4ff,#ff6b9d);
+  background-size:200% 100%;
+  animation:rhl-grad 1.5s linear infinite;
+  box-shadow:0 0 10px #6c63ff88;position:relative;
+  transition:width .3s ease;
+}
+.rhl-bar-fill::after{
+  content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);
+  width:6px;height:6px;border-radius:50%;background:#fff;
+  box-shadow:0 0 8px #fff,0 0 16px #6c63ff;
+}
+.rhl-bar-shimmer{
+  position:absolute;top:0;left:-60px;width:60px;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
+  animation:rhl-shimmer 1.5s ease-in-out infinite;
+}
+@keyframes rhl-shimmer{0%{left:-60px}100%{left:110%}}
+.rhl-progress-info{display:flex;justify-content:space-between;width:100%}
+.rhl-status{font-size:11px;letter-spacing:1px;color:#5a5a8a;font-family:'Courier New',monospace}
+.rhl-pct{font-size:11px;letter-spacing:1px;color:#6c63ff;font-family:'Courier New',monospace;font-weight:700}
+
+/* dots */
+.rhl-dots{display:flex;gap:8px}
+.rhl-dot{width:6px;height:6px;border-radius:50%;background:#2a2a4a;animation:rhl-dot-pop 1.2s ease-in-out infinite}
+.rhl-dot:nth-child(1){animation-delay:0s}
+.rhl-dot:nth-child(2){animation-delay:.15s}
+.rhl-dot:nth-child(3){animation-delay:.3s}
+.rhl-dot:nth-child(4){animation-delay:.45s}
+.rhl-dot:nth-child(5){animation-delay:.6s}
+@keyframes rhl-dot-pop{
+  0%,100%{transform:scale(1);background:#2a2a4a}
+  50%{transform:scale(1.6);background:#6c63ff;box-shadow:0 0 8px #6c63ff}
+}
+</style>
+
+<!-- ③ PASTE THIS SCRIPT block before </body> -->
+<script>
+(function () {
+  /* ── guard: run only once ── */
+  if (window.__RHLoaderInit) return;
+  window.__RHLoaderInit = true;
+
+  const overlay  = document.getElementById('rhl-overlay');
+  const canvas   = document.getElementById('rhl-particles');
+  const hexCont  = document.getElementById('rhl-hexagons');
+  const barEl    = document.getElementById('rhl-bar');
+  const pctEl    = document.getElementById('rhl-pct');
+  const statusEl = document.getElementById('rhl-status');
+
+  /* ────────────────────────────
+     PARTICLES
+  ──────────────────────────── */
+  const ctx = canvas.getContext('2d');
+  let W, H, rafParticles;
+  const COLORS = ['#6c63ff','#00d4ff','#ff6b9d','#a78bfa','#34d399'];
+
+  function resizeCanvas() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  class Particle {
+    constructor() { this.spawn(); }
+    spawn() {
+      this.x     = Math.random() * W;
+      this.y     = Math.random() * H;
+      this.r     = Math.random() * 1.8 + 0.3;
+      this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      this.vx    = (Math.random() - 0.5) * 0.4;
+      this.vy    = (Math.random() - 0.5) * 0.4;
+      this.alpha = Math.random() * 0.6 + 0.1;
+      this.life  = 0;
+      this.max   = Math.random() * 400 + 200;
+    }
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      this.life++;
+      const t    = this.life / this.max;
+      const fade = t < 0.1 ? t / 0.1 : t > 0.9 ? (1 - t) / 0.1 : 1;
+      this.a     = this.alpha * fade;
+      if (this.life >= this.max) this.spawn();
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = this.color + Math.round(this.a * 255).toString(16).padStart(2,'0');
+      ctx.fill();
+    }
+  }
+
+  const pts = Array.from({length: 120}, () => new Particle());
+
+  function drawLinks() {
+    const live = pts.filter(p => p.a > 0.2);
+    for (let i = 0; i < live.length; i++) {
+      for (let j = i + 1; j < live.length; j++) {
+        const dx = live[i].x - live[j].x;
+        const dy = live[i].y - live[j].y;
+        const d  = Math.sqrt(dx*dx + dy*dy);
+        if (d < 80) {
+          ctx.beginPath();
+          ctx.moveTo(live[i].x, live[i].y);
+          ctx.lineTo(live[j].x, live[j].y);
+          ctx.strokeStyle = `rgba(108,99,255,${(1 - d/80) * 0.08})`;
+          ctx.lineWidth   = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function loopParticles() {
+    ctx.clearRect(0, 0, W, H);
+    pts.forEach(p => { p.update(); p.draw(); });
+    drawLinks();
+    rafParticles = requestAnimationFrame(loopParticles);
+  }
+  loopParticles();
+
+  /* ────────────────────────────
+     FLOATING HEXAGONS
+  ──────────────────────────── */
+  for (let i = 0; i < 8; i++) {
+    const ns  = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    const sz  = Math.random() * 80 + 30;
+    svg.setAttribute('width', sz);
+    svg.setAttribute('height', sz);
+    svg.setAttribute('viewBox', '0 0 100 100');
+    const poly = document.createElementNS(ns, 'polygon');
+    poly.setAttribute('points', '50,2 95,25 95,75 50,98 5,75 5,25');
+    poly.setAttribute('fill', 'none');
+    poly.setAttribute('stroke', COLORS[i % COLORS.length]);
+    poly.setAttribute('stroke-width', '3');
+    svg.appendChild(poly);
+    svg.classList.add('rhl-hex');
+    svg.style.left              = (Math.random() * 90 + 5) + '%';
+    svg.style.animationDuration = (Math.random() * 12 + 10) + 's';
+    svg.style.animationDelay    = -(Math.random() * 20) + 's';
+    hexCont.appendChild(svg);
+  }
+
+  /* ────────────────────────────
+     INFINITE PROGRESS LOOP
+     (cycles 0→100 repeatedly until stop() is called)
+  ──────────────────────────── */
+  const MESSAGES = [
+    'Initializing core modules...',
+    'Loading seat configurations...',
+    'Syncing member database...',
+    'Fetching reservation data...',
+    'Loading hall floor plans...',
+    'Establishing connections...',
+    'Compiling preferences...',
+    'Verifying system integrity...',
+    'Almost there...'
+  ];
+
+  let pct      = 0;
+  let msgIdx   = 0;
+  let rafProg;
+  let stopping = false;
+
+  function loopProgress() {
+    const speed = pct < 40 ? 0.5 : pct < 80 ? 0.3 : 0.15;
+    pct += speed;
+
+    /* update message at each ~11% step */
+    const step = Math.floor(pct / 11.2);
+    if (step < MESSAGES.length && step !== msgIdx) {
+      msgIdx = step;
+      statusEl.textContent = MESSAGES[msgIdx];
+    }
+
+    if (pct >= 100) {
+      /* if stop() was requested, finish cleanly */
+      if (stopping) {
+        barEl.style.width   = '100%';
+        pctEl.textContent   = '100%';
+        statusEl.textContent = 'System ready. Launching...';
+        setTimeout(destroy, 600);
+        return;
+      }
+      /* otherwise silently loop back */
+      pct    = 0;
+      msgIdx = 0;
+    }
+
+    barEl.style.width = pct + '%';
+    pctEl.textContent = Math.floor(pct) + '%';
+    rafProg = requestAnimationFrame(loopProgress);
+  }
+
+  setTimeout(() => { rafProg = requestAnimationFrame(loopProgress); }, 300);
+
+  /* ────────────────────────────
+     DESTROY — removes every trace
+  ──────────────────────────── */
+  function destroy() {
+    /* cancel all animation loops */
+    cancelAnimationFrame(rafParticles);
+    cancelAnimationFrame(rafProg);
+
+    /* fade out */
+    overlay.classList.add('rhl-hidden');
+
+    /* remove DOM + style after transition ends */
+    overlay.addEventListener('transitionend', function cleanup() {
+      overlay.removeEventListener('transitionend', cleanup);
+      overlay.remove();
+
+      /* remove the style tag we injected */
+      const st = document.getElementById('rhl-style');
+      if (st) st.remove();
+
+      /* clean up resize listener */
+      window.removeEventListener('resize', resizeCanvas);
+
+      /* release global flag so a re-init is possible */
+      delete window.__RHLoaderInit;
+      delete window.RHLoader;
+    }, { once: true });
+  }
+
+  /* ────────────────────────────
+     PUBLIC API
+  ──────────────────────────── */
+  window.RHLoader = {
+    /**
+     * Call RHLoader.stop() from anywhere to dismiss the loader.
+     * It finishes the current progress sweep to 100% then fades out.
+     */
+    stop: function () {
+      if (stopping) return;   /* ignore duplicate calls */
+      stopping = true;
+      /* accelerate to 100% quickly */
+      cancelAnimationFrame(rafProg);
+      pct = Math.max(pct, 85); /* jump to at least 85 so it feels fast */
+      rafProg = requestAnimationFrame(loopProgress);
+    }
+  };
+
+})();
+
+<!-- This Is TO Stop Loader -->
+RHLoader.stop();
+</script>
+
+
+  
+<div id="overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="p-5 border-b border-amber-900/20 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center text-base font-black text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">R</div>
+      <div><div class="display text-amber-300 font-bold text-lg leading-none">ReadSpace</div><div class="text-stone-500 text-xs">Admin Panel</div></div>
+    </div>
+  </div>
+  <div class="px-4 py-3 border-b border-amber-900/10 flex-shrink-0">
+    <select class="w-full text-xs px-3 py-2 rounded-lg text-amber-300" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2)">
+      <option>🏛 Nagpur Main Branch</option><option>🏛 Civil Lines</option><option>🏛 Sitabuldi</option>
+    </select>
+  </div>
+  <nav class="p-3 flex-1">
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-1">Main</div>
+    <a href="admin-dashboard.html" class="nl">⊞ <span>Dashboard</span></a>
+    <a href="admin-halls.html" class="nl">🏛 <span>Manage Halls</span></a>
+    <a href="admin-seats.html" class="nl on">🪑 <span>Seat Manager</span></a>
+    <a href="admin-students.html" class="nl">👥 <span>Students</span></a>
+    <a href="admin-fees.html" class="nl">💳 <span>Fees & Payments</span></a>
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-4">Config</div>
+    <a href="admin-branches.html" class="nl">📍 <span>Branches</span></a>
+    <a href="admin-shifts.html" class="nl">⏰ <span>Shift Timings</span></a>
+    <a href="admin-subscription.html" class="nl">⭐ <span>Subscription</span></a>
+    <a href="admin-settings.html" class="nl">⚙ <span>Settings</span></a>
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-4">My Plan</div>
+    <a href="saas-overview.html" class="nl">🚀 <span>Plan Overview</span></a>
+    <a href="saas-billing.html" class="nl">🧾 <span>Billing &amp; Invoices</span></a>
+    <a href="saas-upgrade.html" class="nl">⬆ <span>Upgrade Plan</span></a>
+    <a href="saas-usage.html" class="nl">📊 <span>Usage &amp; Limits</span></a>
+  </nav>
+  <div class="p-4 border-t border-amber-900/10 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">RS</div>
+      <div class="flex-1 min-w-0"><div class="text-xs text-stone-200 font-medium truncate">Rahul Sharma</div><div class="text-xs text-stone-500">Super Admin</div></div>
+      <a href="admin-login.html" class="text-stone-500 hover:text-red-400 text-lg">⏻</a>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div id="main" class="flex flex-col min-h-screen">
+  <header class="topbar px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
+    <button id="menu-btn" onclick="openSidebar()" class="w-9 h-9 flex items-center justify-center rounded-xl text-amber-400 flex-shrink-0">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+    </button>
+    <div class="flex-1 min-w-0">
+      <div class="display text-base sm:text-xl text-stone-100 font-bold">Seat Manager</div>
+      <div class="text-xs text-stone-500 hidden sm:block">Visual seat assignment & management</div>
+    </div>
+    <button onclick="openAssign(null)" class="text-xs px-3 sm:px-4 py-2 rounded-xl font-semibold text-stone-900 whitespace-nowrap" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">+ Assign</button>
+  </header>
+
+  <main class="flex-1 p-4 sm:p-6 space-y-4">
+
+    <!-- Controls: scroll-x on mobile -->
+    <div class="overflow-x-auto pb-1">
+      <div class="flex items-center gap-3 min-w-max">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-stone-500 uppercase tracking-wider">Hall:</span>
+          <select id="hallSel" class="text-sm px-3 py-2 rounded-lg" onchange="renderGrid()">
+            <option value="A">Hall A</option><option value="B">Hall B</option><option value="C">Hall C</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-stone-500 uppercase tracking-wider">Shift:</span>
+          <select id="shiftSel" class="text-sm px-3 py-2 rounded-lg" onchange="renderGrid()">
+            <option value="all">All Shifts</option>
+            <option value="morning">Morning (6AM–12PM)</option>
+            <option value="evening">Evening (2PM–10PM)</option>
+            <option value="fullday">Full Day</option>
+          </select>
+        </div>
+        <div class="flex gap-1.5 ml-2">
+          <button class="fb on" onclick="setF('all',this)">All</button>
+          <button class="fb" onclick="setF('empty',this)">Empty</button>
+          <button class="fb" onclick="setF('occ',this)">Occupied</button>
+          <button class="fb" onclick="setF('half',this)">Half-day</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main grid area -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+
+      <!-- Seat Grid (full width on mobile, 2/3 on xl) -->
+      <div class="xl:col-span-2">
+        <div class="card p-4 sm:p-5">
+          <!-- Stats bar -->
+          <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <div class="flex gap-4 sm:gap-6">
+              <div class="text-center"><div id="s-empty" class="text-lg sm:text-2xl font-bold text-blue-400">0</div><div class="text-xs text-stone-500">Empty</div></div>
+              <div class="text-center"><div id="s-occ" class="text-lg sm:text-2xl font-bold text-red-400">0</div><div class="text-xs text-stone-500">Occupied</div></div>
+              <div class="text-center"><div id="s-half" class="text-lg sm:text-2xl font-bold text-amber-400">0</div><div class="text-xs text-stone-500">Half-day</div></div>
+              <div class="text-center"><div id="s-tot" class="text-lg sm:text-2xl font-bold text-stone-300">0</div><div class="text-xs text-stone-500">Total</div></div>
+            </div>
+            <!-- legend -->
+            <div class="flex flex-wrap gap-2 text-xs text-stone-400">
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-indigo-400 inline-block"></span>Morning</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block"></span>Evening</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-green-400 inline-block"></span>Full Day</span>
+            </div>
+          </div>
+          <div class="text-xs text-stone-600 text-center mb-2 tracking-wider">— ENTRANCE —</div>
+          <div id="seat-grid" class="flex flex-wrap gap-1.5 justify-center"></div>
+          <div class="text-xs text-stone-600 text-center mt-2 tracking-wider">— BACK WALL —</div>
+
+          <!-- selected strip -->
+          <div id="sel-strip" class="hidden mt-4 p-3 rounded-xl flex items-center justify-between gap-3 flex-wrap" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3)">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="text-2xl">🪑</span>
+              <div class="min-w-0">
+                <div class="text-sm font-semibold text-amber-300 truncate" id="ss-name">—</div>
+                <div class="text-xs text-stone-400" id="ss-info">—</div>
+              </div>
+            </div>
+            <button onclick="openAssign(window._selectedSeat)" class="text-sm px-4 py-2 rounded-xl font-semibold text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Book →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Side panels -->
+      <div class="space-y-4">
+        <!-- Detail panel -->
+        <div class="card p-4" id="detail-panel">
+          <div class="text-sm font-semibold text-stone-300 mb-3">Seat Detail</div>
+          <div id="detail-body" class="text-center py-5 text-stone-600">
+            <div class="text-4xl mb-2">🪑</div>
+            <p class="text-sm">Tap any seat</p>
+          </div>
+        </div>
+        <!-- Search -->
+        <div class="card p-4">
+          <div class="text-sm font-semibold text-stone-300 mb-3">Find Student</div>
+          <input type="text" placeholder="Name or seat…" class="w-full px-3 py-2.5 text-sm mb-2" oninput="doSearch(this.value)">
+          <div id="search-res" class="space-y-1 max-h-40 overflow-y-auto"></div>
+        </div>
+        <!-- Bulk -->
+        <div class="card p-4">
+          <div class="text-sm font-semibold text-stone-300 mb-3">Bulk Actions</div>
+          <div class="space-y-2">
+            <button class="w-full text-sm py-2.5 rounded-xl text-stone-400 hover:text-amber-400 text-left px-3" style="background:rgba(255,255,255,0.04)">📋 Export seat list</button>
+            <button class="w-full text-sm py-2.5 rounded-xl text-stone-400 hover:text-amber-400 text-left px-3" style="background:rgba(255,255,255,0.04)">🔄 Send renewals</button>
+            <button class="w-full text-sm py-2.5 rounded-xl text-red-400 hover:text-red-300 text-left px-3" style="background:rgba(239,68,68,0.06)">⚠ Release expired</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Assign Modal -->
+<div id="assign-modal" class="modal-bg hidden">
+  <div class="modal-card">
+    <!-- drag indicator on mobile -->
+    <div class="w-10 h-1 bg-stone-600 rounded-full mx-auto mb-4 sm:hidden"></div>
+    <button onclick="closeModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-stone-400 hover:text-stone-200 rounded-lg hover:bg-white/10 text-xl">✕</button>
+    <h3 class="display text-xl text-stone-100 font-bold mb-1" id="m-title">Assign Seat</h3>
+    <p class="text-xs text-stone-500 mb-5" id="m-sub">Fill in student details</p>
+    <div class="space-y-3">
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Seat No.</label><input id="inp-seat" type="text" placeholder="A-12" class="w-full px-3 py-2.5 text-sm"></div>
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Hall</label>
+          <select class="w-full px-3 py-2.5 text-sm"><option>Hall A</option><option>Hall B</option><option>Hall C</option></select>
+        </div>
+      </div>
+      <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Student Name</label><input type="text" placeholder="Full name" class="w-full px-3 py-2.5 text-sm"></div>
+      <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Phone</label><input type="tel" placeholder="+91 98765 43210" class="w-full px-3 py-2.5 text-sm"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Shift</label>
+          <select class="w-full px-3 py-2.5 text-sm"><option>Morning</option><option>Evening</option><option>Full Day</option><option>Half Day</option></select>
+        </div>
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Duration</label>
+          <select class="w-full px-3 py-2.5 text-sm"><option>1 Month</option><option>3 Months</option><option>6 Months</option><option>1 Year</option></select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Start Date</label><input type="date" class="w-full px-3 py-2.5 text-sm"></div>
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Monthly Fee</label><input type="number" placeholder="₹1500" class="w-full px-3 py-2.5 text-sm"></div>
+      </div>
+      <div class="flex gap-3 pt-1">
+        <button onclick="closeModal()" class="flex-1 py-3 rounded-xl text-sm text-stone-400" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">Cancel</button>
+        <button onclick="doAssign()" class="flex-1 py-3 rounded-xl text-sm font-semibold text-stone-900" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Assign ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
+function checkBtn(){document.getElementById('menu-btn').style.display=window.innerWidth>=1024?'none':'flex'}
+checkBtn();window.addEventListener('resize',checkBtn);
+
+const NAMES=['Priya Deshmukh','Rohan Joshi','Amit Khurrana','Sneha Patil','Vikram Singh','Anita Bhende','Suresh Kamble','Pooja Wankhede','Ravi Kumar','Neha Sharma','Ajay Patil','Meera Gupta'];
+const SHIFTS=['morning','evening','fullday','half'];
+const SCLS={morning:'morn',evening:'eve',fullday:'occ',half:'half'};
+const DOTS={morning:'bg-indigo-400',evening:'bg-orange-400',fullday:'bg-green-400',half:'bg-amber-400'};
+
+let seats=[], curFilter='all', selectedEl=null;
+window._selectedSeat=null;
+
+function genSeats(count=60){
+  const hall=document.getElementById('hallSel').value;
+  return Array.from({length:count},(_,i)=>{
+    const r=Math.random(), isEmpty=r<0.25;
+    const sh=SHIFTS[Math.floor(Math.random()*SHIFTS.length)];
+    return{id:i+1,label:`${hall}-${i+1}`,status:isEmpty?'empty':sh,student:isEmpty?null:NAMES[Math.floor(Math.random()*NAMES.length)],phone:isEmpty?null:`+91 9${Math.floor(Math.random()*9e8+1e8)}`,fee:[1200,1500,1800,2000][Math.floor(Math.random()*4)],paid:Math.random()>0.15,validTill:'31 Mar 2026'};
+  });
+}
+
+function renderGrid(){
+  seats=genSeats(60);
+  const g=document.getElementById('seat-grid');
+  g.innerHTML='';
+  let e=0,o=0,h=0;
+  seats.forEach(s=>{
+    const isEmpty=s.status==='empty';
+    if(isEmpty)e++;else if(s.status==='half')h++;else o++;
+    const cls=isEmpty?'empty':(SCLS[s.status]||'occ');
+    const show=curFilter==='all'||(curFilter==='empty'&&isEmpty)||(curFilter==='occ'&&!isEmpty&&s.status!=='half')||(curFilter==='half'&&s.status==='half');
+    const el=document.createElement('div');
+    el.className=`seat ${cls}`;
+    el.style.opacity=show?'1':'0.15';
+    el.innerHTML=`${s.id}${!isEmpty?`<span class="seatdot ${DOTS[s.status]}"></span>`:''}`;
+    el.onclick=()=>selectSeat(s,el);
+    g.appendChild(el);
+  });
+  document.getElementById('s-empty').textContent=e;
+  document.getElementById('s-occ').textContent=o;
+  document.getElementById('s-half').textContent=h;
+  document.getElementById('s-tot').textContent=seats.length;
+  selectedEl=null;window._selectedSeat=null;
+  document.getElementById('sel-strip').classList.add('hidden');
+  document.getElementById('detail-body').innerHTML='<div class="text-center py-5 text-stone-600"><div class="text-4xl mb-2">🪑</div><p class="text-sm">Tap any seat</p></div>';
+}
+
+function selectSeat(s,el){
+  if(selectedEl)selectedEl.classList.remove('selected');
+  el.classList.add('selected');selectedEl=el;window._selectedSeat=s;
+  document.getElementById('sel-strip').classList.remove('hidden');
+  document.getElementById('ss-name').textContent=`Seat ${s.label}`;
+  document.getElementById('ss-info').textContent=s.student||'Empty – click Book to assign';
+  // Detail panel
+  const c={empty:'#3b82f6',morning:'#818cf8',evening:'#f97316',fullday:'#22c55e',half:'#f59e0b'}[s.status]||'#94a3b8';
+  const lbl=({empty:'Empty',morning:'Morning',evening:'Evening',fullday:'Full Day',half:'Half Day'})[s.status];
+  document.getElementById('detail-body').innerHTML=`
+    <div class="text-center mb-3">
+      <div class="w-12 h-12 rounded-xl mx-auto mb-2 flex items-center justify-center text-xl" style="background:${c}22;border:2px solid ${c}">🪑</div>
+      <div class="font-bold text-stone-100 text-sm">${s.label}</div>
+      <span class="text-xs px-2 py-0.5 rounded-full font-semibold" style="background:${c}22;color:${c}">${lbl}</span>
+    </div>
+    ${s.student?`<div class="space-y-1.5 text-xs text-left">
+      ${[['Student',s.student],['Phone',s.phone],['Shift',lbl],['Fee','₹'+s.fee+'/mo'],['Status',s.paid?'✓ Paid':'⚠ Due'],['Valid Till',s.validTill]].map(([k,v])=>`
+      <div class="flex justify-between py-1.5" style="border-bottom:1px solid rgba(255,255,255,0.06)"><span class="text-stone-500">${k}</span><span class="text-stone-200 font-medium">${v}</span></div>`).join('')}
+    </div>
+    <div class="flex gap-2 mt-3">
+      <button onclick="openAssign(window._selectedSeat)" class="flex-1 py-2 rounded-xl text-xs font-semibold text-stone-900" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Edit</button>
+      <button onclick="releaseSeat(${s.id})" class="flex-1 py-2 rounded-xl text-xs font-semibold text-red-400" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2)">Release</button>
+    </div>`:`
+    <p class="text-stone-500 text-xs text-center mb-3">This seat is empty</p>
+    <button onclick="openAssign(${s.id})" class="w-full py-2 rounded-xl text-xs font-semibold text-stone-900" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Assign Student</button>`}`;
+}
+
+function setF(f,btn){
+  curFilter=f;
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderGrid();
+}
+
+function openAssign(s){
+  document.getElementById('inp-seat').value=s&&s.label?s.label:(s&&typeof s==='number'?`${document.getElementById('hallSel').value}-${s}`:'');
+  document.getElementById('m-title').textContent=s?'Edit / Assign Seat':'Assign New Seat';
+  document.getElementById('assign-modal').classList.remove('hidden');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){document.getElementById('assign-modal').classList.add('hidden');document.body.style.overflow=''}
+function doAssign(){closeModal();renderGrid();toast('Seat assigned successfully!')}
+function releaseSeat(id){const s=seats.find(x=>x.id===id);if(s){s.status='empty';s.student=null}renderGrid();toast('Seat released')}
+
+function doSearch(q){
+  const r=document.getElementById('search-res');
+  if(!q){r.innerHTML='';return}
+  const m=seats.filter(s=>s.student&&s.student.toLowerCase().includes(q.toLowerCase()));
+  r.innerHTML=m.slice(0,5).map(s=>`<div class="flex justify-between px-2 py-1.5 rounded-lg hover:bg-white/5 cursor-pointer text-xs" onclick="selectSeat(seats[${s.id-1}],document.querySelectorAll('.seat')[${s.id-1}])"><span class="text-stone-300 truncate">${s.student}</span><span class="text-stone-500 ml-2 flex-shrink-0">${s.label}</span></div>`).join('')||'<div class="text-xs text-stone-600 px-2">No results</div>';
+}
+
+function toast(msg){const t=document.createElement('div');t.className='fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-6 sm:translate-x-0 px-5 py-3 rounded-xl text-sm font-semibold text-stone-900 z-50 shadow-lg';t.style='background:linear-gradient(135deg,#c9a84c,#e8b84b)';t.textContent='✓ '+msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}
+
+renderGrid();
+</script>
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReadSpace – Usage & Limits</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:#0e0e22;color:#e2e8f0;margin:0}
+  .display{font-family:'Playfair Display',serif}
+  #sidebar{position:fixed;top:0;left:0;height:100%;width:256px;background:#12122a;border-right:1px solid rgba(201,168,76,0.15);z-index:50;transform:translateX(-100%);transition:transform 0.3s ease;display:flex;flex-direction:column;overflow-y:auto}
+  #sidebar.open{transform:translateX(0)}
+  #overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:49;display:none}
+  #overlay.show{display:block}
+  @media(min-width:1024px){#sidebar{transform:translateX(0)}#overlay{display:none!important}#main{margin-left:256px}#menu-btn{display:none}}
+  .card{background:#1a1a35;border:1px solid rgba(255,255,255,0.06);border-radius:16px}
+  .nl{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;margin-bottom:2px;font-size:14px;font-weight:500;color:#94a3b8;transition:all 0.2s;text-decoration:none}
+  .nl:hover{background:rgba(255,255,255,0.05);color:#e2e8f0}
+  .nl.on{background:linear-gradient(135deg,#c9a84c,#e8b84b);color:#12122a;font-weight:700}
+  .topbar{background:#12122a;border-bottom:1px solid rgba(201,168,76,0.1);position:sticky;top:0;z-index:40}
+  .bg-g{border-radius:999px;padding:2px 10px;font-size:11px;font-weight:600;background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.2)}
+  .bg-r{border-radius:999px;padding:2px 10px;font-size:11px;font-weight:600;background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
+  .bg-a{border-radius:999px;padding:2px 10px;font-size:11px;font-weight:600;background:rgba(201,168,76,0.15);color:#e8b84b;border:1px solid rgba(201,168,76,0.2)}
+  select{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;border-radius:10px}
+  select:focus{outline:none;border-color:#c9a84c}
+  select option{background:#1a1a35}
+  /* Usage meter */
+  .meter-track{background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden}
+  .usage-card{background:#1a1a35;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;transition:all 0.3s}
+  .usage-card:hover{border-color:rgba(201,168,76,0.2)}
+  /* Radial ring */
+  .ring-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center}
+  .ring-wrap canvas{position:absolute}
+  ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:#0e0e22}::-webkit-scrollbar-thumb{background:#c9a84c44;border-radius:2px}
+</style>
+</head>
+<body>
+<div id="overlay" onclick="closeSidebar()"></div>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside id="sidebar">
+  <div class="p-5 border-b border-amber-900/20 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center text-base font-black text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">R</div>
+      <div>
+        <div class="display text-amber-300 font-bold text-lg leading-none">ReadSpace</div>
+        <div class="text-stone-500 text-xs">Admin Panel</div>
+      </div>
+    </div>
+  </div>
+  <div class="px-4 py-3 border-b border-amber-900/10 flex-shrink-0">
+    <select class="w-full text-xs px-3 py-2 rounded-lg text-amber-300" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2)">
+      <option>🏛 Nagpur Main Branch</option><option>🏛 Civil Lines Branch</option><option>🏛 Sitabuldi Branch</option>
+    </select>
+  </div>
+  <nav class="p-3 flex-1">
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-1">Main</div>
+    <a href="admin-dashboard.html" class="nl">⊞ <span>Dashboard</span></a>
+    <a href="admin-halls.html" class="nl">🏛 <span>Manage Halls</span></a>
+    <a href="admin-seats.html" class="nl">🪑 <span>Seat Manager</span></a>
+    <a href="admin-students.html" class="nl">👥 <span>Students</span></a>
+    <a href="admin-fees.html" class="nl">💳 <span>Fees & Payments</span></a>
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-4">Config</div>
+    <a href="admin-branches.html" class="nl">📍 <span>Branches</span></a>
+    <a href="admin-shifts.html" class="nl">⏰ <span>Shift Timings</span></a>
+    <a href="admin-subscription.html" class="nl">⭐ <span>Subscription</span></a>
+    <a href="admin-settings.html" class="nl">⚙ <span>Settings</span></a>
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-4">My Plan</div>
+    <a href="saas-overview.html" class="nl">🚀 <span>Plan Overview</span></a>
+    <a href="saas-billing.html" class="nl">🧾 <span>Billing & Invoices</span></a>
+    <a href="saas-upgrade.html" class="nl">⬆ <span>Upgrade Plan</span></a>
+    <a href="saas-usage.html" class="nl on">📊 <span>Usage & Limits</span></a>
+  </nav>
+  <div class="p-4 border-t border-amber-900/10 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">RS</div>
+      <div class="flex-1 min-w-0"><div class="text-xs text-stone-200 font-medium truncate">Rahul Sharma</div><div class="text-xs text-stone-500">Super Admin</div></div>
+      <a href="admin-login.html" class="text-stone-500 hover:text-red-400 text-lg">⏻</a>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<div id="main" class="flex flex-col min-h-screen">
+  <header class="topbar px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
+    <button id="menu-btn" onclick="openSidebar()" class="w-9 h-9 flex items-center justify-center rounded-xl text-amber-400 hover:bg-white/5 flex-shrink-0">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+    </button>
+    <div class="flex-1 min-w-0">
+      <div class="display text-base sm:text-xl text-stone-100 font-bold">Usage & Limits</div>
+      <div class="text-xs text-stone-500 hidden sm:block">Monitor your plan usage — Pro Plan</div>
+    </div>
+    <a href="saas-upgrade.html" class="text-xs px-3 py-2 rounded-xl font-semibold text-stone-900 whitespace-nowrap" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">⬆ Upgrade</a>
+  </header>
+
+  <main class="flex-1 p-4 sm:p-6 space-y-4 sm:space-y-5">
+
+    <!-- Billing cycle notice -->
+    <div class="flex items-center gap-3 px-4 py-3 rounded-xl" style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2)">
+      <span class="text-amber-400 text-lg">📅</span>
+      <div class="text-xs text-stone-400">Current billing cycle: <strong class="text-stone-200">1 Apr – 30 Apr 2026</strong> · Resets in <strong class="text-amber-400">29 days</strong></div>
+      <a href="saas-billing.html" class="ml-auto text-xs text-amber-400 hover:underline whitespace-nowrap">View invoices →</a>
+    </div>
+
+    <!-- Main usage meters — 2×2 → 4 on xl -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+
+      <!-- Branches -->
+      <div class="usage-card">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">📍</span>
+            <div class="text-sm font-semibold text-stone-300">Branches</div>
+          </div>
+          <span class="bg-a">3 of 5</span>
+        </div>
+        <div class="flex items-end gap-3 mb-3">
+          <div class="display text-3xl font-black text-stone-100">3</div>
+          <div class="text-stone-600 text-sm mb-1">/ 5 allowed</div>
+        </div>
+        <div class="meter-track h-2 mb-2"><div class="h-full rounded-full bg-amber-400" style="width:60%"></div></div>
+        <div class="text-xs text-stone-600">2 more branches available</div>
+      </div>
+
+      <!-- Students -->
+      <div class="usage-card">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">👥</span>
+            <div class="text-sm font-semibold text-stone-300">Students</div>
+          </div>
+          <span class="bg-g">148 of 500</span>
+        </div>
+        <div class="flex items-end gap-3 mb-3">
+          <div class="display text-3xl font-black text-stone-100">148</div>
+          <div class="text-stone-600 text-sm mb-1">/ 500 allowed</div>
+        </div>
+        <div class="meter-track h-2 mb-2"><div class="h-full rounded-full bg-green-400" style="width:29.6%"></div></div>
+        <div class="text-xs text-stone-600">352 seats available to assign</div>
+      </div>
+
+      <!-- SMS -->
+      <div class="usage-card">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">📱</span>
+            <div class="text-sm font-semibold text-stone-300">SMS This Month</div>
+          </div>
+          <span class="bg-a">318 of 500</span>
+        </div>
+        <div class="flex items-end gap-3 mb-3">
+          <div class="display text-3xl font-black text-stone-100">318</div>
+          <div class="text-stone-600 text-sm mb-1">/ 500 allowed</div>
+        </div>
+        <div class="meter-track h-2 mb-2"><div class="h-full rounded-full bg-amber-400" style="width:63.6%"></div></div>
+        <div class="text-xs text-amber-500">⚠ 182 remaining — resets 1 May</div>
+      </div>
+
+      <!-- Admin Accounts -->
+      <div class="usage-card">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">👤</span>
+            <div class="text-sm font-semibold text-stone-300">Admin Accounts</div>
+          </div>
+          <span class="bg-g">4 of 5</span>
+        </div>
+        <div class="flex items-end gap-3 mb-3">
+          <div class="display text-3xl font-black text-stone-100">4</div>
+          <div class="text-stone-600 text-sm mb-1">/ 5 allowed</div>
+        </div>
+        <div class="meter-track h-2 mb-2"><div class="h-full rounded-full bg-green-400" style="width:80%"></div></div>
+        <div class="text-xs text-stone-600">1 admin slot remaining</div>
+      </div>
+    </div>
+
+    <!-- SMS Usage Chart + breakdown -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+      <!-- SMS trend chart -->
+      <div class="card p-4 sm:p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div class="text-sm font-semibold text-stone-300">📱 SMS Usage — Last 6 Months</div>
+          <div class="text-xs text-stone-600">500/mo limit</div>
+        </div>
+        <canvas id="sms-chart" height="160"></canvas>
+      </div>
+
+      <!-- Student growth chart -->
+      <div class="card p-4 sm:p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div class="text-sm font-semibold text-stone-300">👥 Student Growth</div>
+          <div class="text-xs text-stone-600">500 limit</div>
+        </div>
+        <canvas id="student-chart" height="160"></canvas>
+      </div>
+    </div>
+
+    <!-- Per-branch usage breakdown -->
+    <div class="card p-4 sm:p-5">
+      <div class="text-sm font-semibold text-stone-300 mb-4">📍 Usage by Branch</div>
+      <div class="space-y-4" id="branch-usage"></div>
+    </div>
+
+    <!-- Locked features upgrade prompt -->
+    <div class="card p-4 sm:p-5" style="border-color:rgba(139,92,246,0.2);background:rgba(139,92,246,0.04)">
+      <div class="flex items-start gap-3">
+        <span class="text-2xl">🔒</span>
+        <div class="flex-1">
+          <div class="text-sm font-bold text-purple-300 mb-1">Features locked on your plan</div>
+          <div class="text-xs text-stone-500 mb-3">Upgrade to Business to unlock WhatsApp alerts, custom branding, and API access.</div>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <span class="text-xs px-2.5 py-1 rounded-full text-stone-500" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)">🔒 WhatsApp Alerts</span>
+            <span class="text-xs px-2.5 py-1 rounded-full text-stone-500" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)">🔒 Custom Branding</span>
+            <span class="text-xs px-2.5 py-1 rounded-full text-stone-500" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)">🔒 API Access</span>
+            <span class="text-xs px-2.5 py-1 rounded-full text-stone-500" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)">🔒 Unlimited Branches</span>
+            <span class="text-xs px-2.5 py-1 rounded-full text-stone-500" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)">🔒 Unlimited SMS</span>
+          </div>
+          <a href="saas-upgrade.html" class="inline-block px-5 py-2.5 rounded-xl text-sm font-semibold text-white" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">View Business Plan →</a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
+function checkBtn(){document.getElementById('menu-btn').style.display=window.innerWidth>=1024?'none':'flex'}
+checkBtn();window.addEventListener('resize',checkBtn);
+
+/* ── SMS Chart ── */
+const smsCtx=document.getElementById('sms-chart').getContext('2d');
+new Chart(smsCtx,{
+  type:'bar',
+  data:{
+    labels:['Nov','Dec','Jan','Feb','Mar','Apr'],
+    datasets:[{label:'SMS sent',data:[210,285,320,298,401,318],backgroundColor:['#c9a84c33','#c9a84c33','#c9a84c33','#c9a84c33','#c9a84c33','#c9a84c88'],borderColor:'#c9a84c',borderWidth:1.5,borderRadius:6},{label:'Limit',data:[500,500,500,500,500,500],type:'line',borderColor:'rgba(239,68,68,0.4)',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a35',titleColor:'#94a3b8',bodyColor:'#e2e8f0',borderColor:'rgba(201,168,76,0.3)',borderWidth:1}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#475569',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#475569',font:{size:11}},max:550}}}
+});
+
+/* ── Student Chart ── */
+const stuCtx=document.getElementById('student-chart').getContext('2d');
+new Chart(stuCtx,{
+  type:'line',
+  data:{
+    labels:['Nov','Dec','Jan','Feb','Mar','Apr'],
+    datasets:[{label:'Students',data:[62,84,101,118,135,148],borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.08)',borderWidth:2,fill:true,tension:0.4,pointBackgroundColor:'#22c55e',pointRadius:4},{label:'Limit',data:[500,500,500,500,500,500],borderColor:'rgba(239,68,68,0.35)',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a35',titleColor:'#94a3b8',bodyColor:'#e2e8f0',borderColor:'rgba(201,168,76,0.3)',borderWidth:1}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#475569',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#475569',font:{size:11}},max:550}}}
+});
+
+/* ── Branch breakdown ── */
+const branches=[
+  {name:'Nagpur Main',students:102,seats:120,sms:168,halls:3},
+  {name:'Civil Lines',students:89,seats:120,sms:102,halls:2},
+  {name:'Sitabuldi',students:50,seats:50,sms:48,halls:1},
+];
+document.getElementById('branch-usage').innerHTML=branches.map(b=>{
+  const sp=Math.round(b.students/b.seats*100);
+  const smsColor=b.sms/500>=0.8?'#ef4444':b.sms/500>=0.6?'#f59e0b':'#22c55e';
+  return`<div class="p-4 rounded-xl" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)">
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-2">
+        <span class="text-base">📍</span>
+        <div class="text-sm font-semibold text-stone-200">${b.name}</div>
+      </div>
+      <div class="text-xs text-stone-600">${b.halls} halls</div>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <div class="flex justify-between text-xs mb-1"><span class="text-stone-600">Students</span><span class="text-stone-400">${b.students}/${b.seats}</span></div>
+        <div style="background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;height:5px"><div style="width:${sp}%;height:100%;background:${sp>=90?'#ef4444':sp>=70?'#f59e0b':'#22c55e'};border-radius:99px"></div></div>
+      </div>
+      <div>
+        <div class="flex justify-between text-xs mb-1"><span class="text-stone-600">SMS</span><span class="text-stone-400">${b.sms}/500</span></div>
+        <div style="background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;height:5px"><div style="width:${Math.round(b.sms/500*100)}%;height:100%;background:${smsColor};border-radius:99px"></div></div>
+      </div>
+    </div>
+  </div>`;
+}).join('');
+</script>
+</body>
+</html>

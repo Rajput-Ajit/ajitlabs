@@ -1,0 +1,30 @@
+# Composer dependencies
+/vendor/
+
+/composer.lock
+
+# Environment files
+.env
+.env.local
+
+# Logs
+*.log
+
+# Cache / temp
+/cache/
+/tmp/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# ZIP files
+#*.zip
+
+# Specific folder
+#/js_v2/
+

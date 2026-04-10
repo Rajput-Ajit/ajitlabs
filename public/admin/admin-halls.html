@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReadSpace – Manage Halls</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}body{font-family:'DM Sans',sans-serif;background:#0e0e22;color:#e2e8f0;margin:0}.display{font-family:'Playfair Display',serif}
+  #sidebar{position:fixed;top:0;left:0;height:100%;width:256px;background:#12122a;border-right:1px solid rgba(201,168,76,0.15);z-index:50;transform:translateX(-100%);transition:transform 0.3s ease;display:flex;flex-direction:column;overflow-y:auto}
+  #sidebar.open{transform:translateX(0)}
+  #overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:49;display:none}
+  #overlay.show{display:block}
+  @media(min-width:1024px){#sidebar{transform:translateX(0)}#overlay{display:none!important}#main{margin-left:256px}#menu-btn{display:none}}
+  .card{background:#1a1a35;border:1px solid rgba(255,255,255,0.06);border-radius:16px;transition:all 0.3s}
+  .hcard:hover{transform:translateY(-3px);border-color:rgba(201,168,76,0.3)!important}
+  .nl{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;margin-bottom:2px;font-size:14px;font-weight:500;color:#94a3b8;transition:all 0.2s;text-decoration:none}
+  .nl:hover{background:rgba(255,255,255,0.05);color:#e2e8f0}.nl.on{background:linear-gradient(135deg,#c9a84c,#e8b84b);color:#12122a;font-weight:700}
+  .topbar{background:#12122a;border-bottom:1px solid rgba(201,168,76,0.1);position:sticky;top:0;z-index:40}
+  .bg-g{border-radius:999px;padding:2px 10px;font-size:11px;font-weight:600;background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.2)}
+  .bg-r{border-radius:999px;padding:2px 10px;font-size:11px;font-weight:600;background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
+  .pb{background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden}
+  .branch-btn{padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;border:1px solid rgba(255,255,255,0.08);color:#94a3b8}
+  .branch-btn.on{background:linear-gradient(135deg,#c9a84c,#e8b84b);color:#12122a;border-color:transparent}
+  input,select,textarea{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;border-radius:10px}
+  input::placeholder,textarea::placeholder{color:#475569}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:#c9a84c}
+  select option{background:#1a1a35}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(4px);z-index:60;display:flex;align-items:flex-end;justify-content:center}
+  @media(min-width:640px){.modal-bg{align-items:center;padding:16px}}
+  .modal-card{background:#1a1a35;border:1px solid rgba(201,168,76,0.3);border-radius:20px 20px 0 0;width:100%;max-width:540px;padding:20px;position:relative;max-height:92vh;overflow-y:auto}
+  @media(min-width:640px){.modal-card{border-radius:20px;padding:24px}}
+  ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:#0e0e22}::-webkit-scrollbar-thumb{background:#c9a84c44;border-radius:2px}
+</style>
+</head>
+<body>
+<!-- 🎮 Neon Gate Loader — Modern, simple, professional -->
+<div id="gate-loader">
+  <div class="gate-overlay"></div>
+
+  <div class="gate-box">
+    <div class="gate-door">
+      <div class="door left"></div>
+      <div class="door right"></div>
+      <div class="gate-light"></div>
+    </div>
+
+    <h2 class="gate-title">ReadSpace</h2>
+    <p class="gate-text" id="gate-text">Opening your workspace...</p>
+  </div>
+</div>
+
+<style>
+  #gate-loader{
+    position:fixed;
+    inset:0;
+    z-index:999999;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(201,168,76,.08), transparent 35%),
+      radial-gradient(circle at 80% 80%, rgba(59,130,246,.08), transparent 35%),
+      linear-gradient(135deg,#090916,#101024,#0d0d20);
+    transition:opacity .7s ease, visibility .7s ease;
+  }
+
+  #gate-loader.hide{
+    opacity:0;
+    visibility:hidden;
+  }
+
+  .gate-overlay{
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+    background-size:50px 50px;
+    opacity:.4;
+    animation:gridMove 10s linear infinite;
+  }
+
+  @keyframes gridMove{
+    from{transform:translateY(0)}
+    to{transform:translateY(50px)}
+  }
+
+  .gate-box{
+    position:relative;
+    z-index:2;
+    text-align:center;
+    padding:30px;
+  }
+
+  /* Gate */
+  .gate-door{
+    position:relative;
+    width:180px;
+    height:180px;
+    margin:0 auto 26px;
+    border-radius:24px;
+    overflow:hidden;
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.06);
+    box-shadow:
+      0 0 30px rgba(201,168,76,.06),
+      inset 0 0 20px rgba(255,255,255,.02);
+  }
+
+  .door{
+    position:absolute;
+    top:0;
+    width:50%;
+    height:100%;
+    background:
+      linear-gradient(180deg,
+        rgba(255,255,255,.08),
+        rgba(255,255,255,.03)
+      );
+    backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,.04);
+  }
+
+  .door.left{
+    left:0;
+    border-radius:24px 0 0 24px;
+    animation:slideLeft 2s ease-in-out infinite alternate;
+  }
+
+  .door.right{
+    right:0;
+    border-radius:0 24px 24px 0;
+    animation:slideRight 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes slideLeft{
+    from{transform:translateX(0)}
+    to{transform:translateX(-18px)}
+  }
+
+  @keyframes slideRight{
+    from{transform:translateX(0)}
+    to{transform:translateX(18px)}
+  }
+
+  .gate-light{
+    position:absolute;
+    inset:20px;
+    border-radius:18px;
+    background:
+      radial-gradient(circle,
+        rgba(201,168,76,.22),
+        rgba(59,130,246,.18),
+        transparent 70%);
+    filter:blur(18px);
+    animation:pulseLight 1.8s ease-in-out infinite;
+  }
+
+  @keyframes pulseLight{
+    0%,100%{
+      opacity:.7;
+      transform:scale(1);
+    }
+    50%{
+      opacity:1;
+      transform:scale(1.08);
+    }
+  }
+
+  /* Text */
+  .gate-title{
+    margin:0;
+    font-size:30px;
+    color:#f8fafc;
+    font-family:'Playfair Display', serif;
+    letter-spacing:.8px;
+  }
+
+  .gate-text{
+    margin-top:10px;
+    font-size:14px;
+    color:#94a3b8;
+    min-height:20px;
+    transition:opacity .3s ease;
+  }
+
+  @media(max-width:640px){
+    .gate-door{
+      width:150px;
+      height:150px;
+    }
+
+    .gate-title{
+      font-size:24px;
+    }
+  }
+</style>
+
+<script>
+(function(){
+  const loader = document.getElementById('gate-loader');
+  const text = document.getElementById('gate-text');
+
+  const messages = [
+    'Opening your workspace...',
+    'Unlocking reading halls...',
+    'Loading seats and students...',
+    'Preparing your dashboard...',
+    'Almost ready...'
+  ];
+
+  let i = 0;
+
+  const timer = setInterval(() => {
+    text.style.opacity = '0';
+
+    setTimeout(() => {
+      text.textContent = messages[i % messages.length];
+      text.style.opacity = '1';
+      i++;
+    }, 250);
+  }, 1800);
+
+  window.Loader = {
+    stop() {
+      clearInterval(timer);
+
+      loader.classList.add('hide');
+
+      setTimeout(() => {
+        loader.remove();
+      }, 700);
+    }
+  };
+})();
+</script>
+
+  
+<div id="overlay" onclick="closeSidebar()"></div>
+<aside id="sidebar">
+  <div class="p-5 border-b border-amber-900/20 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center text-base font-black text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">R</div>
+      <div><div class="display text-amber-300 font-bold text-lg leading-none">ReadSpace</div><div class="text-stone-500 text-xs">Admin Panel</div></div>
+    </div>
+  </div>
+  <div class="px-4 py-3 border-b border-amber-900/10 flex-shrink-0">
+    <select class="w-full text-xs px-3 py-2 rounded-lg text-amber-300" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2)">
+      <option>🏛 Nagpur Main Branch</option><option>🏛 Civil Lines</option><option>🏛 Sitabuldi</option>
+    </select>
+  </div>
+  <nav class="p-3 flex-1">
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-1">Main</div>
+    <a href="admin-dashboard.html" class="nl">⊞ <span>Dashboard</span></a>
+    <a href="admin-halls.html" class="nl on">🏛 <span>Manage Halls</span></a>
+    <a href="admin-seats.html" class="nl">🪑 <span>Seat Manager</span></a>
+    <a href="admin-students.html" class="nl">👥 <span>Students</span></a>
+    <a href="admin-fees.html" class="nl">💳 <span>Fees & Payments</span></a>
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-4">Config</div>
+    <a href="admin-branches.html" class="nl">📍 <span>Branches</span></a><a href="admin-shifts.html" class="nl">⏰ <span>Shift Timings</span></a><a href="admin-subscription.html" class="nl">⭐ <span>Subscription</span></a><a href="#" class="nl">⚙ <span>Settings</span></a>
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-4">My Plan</div>
+    <a href="saas-overview.html" class="nl">🚀 <span>Plan Overview</span></a>
+    <a href="saas-billing.html" class="nl">🧾 <span>Billing &amp; Invoices</span></a>
+    <a href="saas-upgrade.html" class="nl">⬆ <span>Upgrade Plan</span></a>
+    <a href="saas-usage.html" class="nl">📊 <span>Usage &amp; Limits</span></a>
+  </nav>
+  <div class="p-4 border-t border-amber-900/10 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">RS</div>
+      <div class="flex-1 min-w-0"><div class="text-xs text-stone-200 font-medium truncate">Rahul Sharma</div><div class="text-xs text-stone-500">Super Admin</div></div>
+      <a href="admin-login.html" class="text-stone-500 hover:text-red-400 text-lg">⏻</a>
+    </div>
+  </div>
+</aside>
+
+<div id="main" class="flex flex-col min-h-screen">
+  <header class="topbar px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
+    <button id="menu-btn" onclick="openSidebar()" class="w-9 h-9 flex items-center justify-center rounded-xl text-amber-400 flex-shrink-0">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+    </button>
+    <div class="flex-1 min-w-0">
+      <div class="display text-base sm:text-xl text-stone-100 font-bold">Manage Halls</div>
+      <div class="text-xs text-stone-500 hidden sm:block">Configure reading halls, shifts & fees</div>
+    </div>
+    <button onclick="document.getElementById('add-modal').classList.remove('hidden');document.body.style.overflow='hidden'" class="text-xs px-3 sm:px-4 py-2 rounded-xl font-semibold text-stone-900 whitespace-nowrap" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">+ Add Hall</button>
+  </header>
+
+  <main class="flex-1 p-4 sm:p-6">
+    <!-- Branch tabs – horizontal scroll -->
+    <div class="overflow-x-auto pb-2 mb-5">
+      <div class="flex gap-2 min-w-max">
+        <button class="branch-btn on" onclick="setBranch(0,this)">All Branches</button>
+        <button class="branch-btn" onclick="setBranch(1,this)">Nagpur Main</button>
+        <button class="branch-btn" onclick="setBranch(2,this)">Civil Lines</button>
+        <button class="branch-btn" onclick="setBranch(3,this)">Sitabuldi</button>
+      </div>
+    </div>
+    <!-- Halls grid: 1 on mobile, 2 on md, 3 on xl -->
+    <div id="halls-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+  </main>
+</div>
+
+<!-- Add Hall Modal -->
+<div id="add-modal" class="modal-bg hidden">
+  <div class="modal-card">
+    <div class="w-10 h-1 bg-stone-600 rounded-full mx-auto mb-4 sm:hidden"></div>
+    <button onclick="closeModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-stone-400 hover:text-stone-200 rounded-lg hover:bg-white/10 text-xl">✕</button>
+    <h3 class="display text-xl text-stone-100 font-bold mb-5">Add New Hall</h3>
+    <div class="space-y-3">
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Hall Name</label><input type="text" placeholder="Hall A" class="w-full px-3 py-2.5 text-sm"></div>
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Branch</label>
+          <select class="w-full px-3 py-2.5 text-sm"><option>Nagpur Main</option><option>Civil Lines</option><option>Sitabuldi</option></select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Total Seats</label><input type="number" placeholder="60" class="w-full px-3 py-2.5 text-sm"></div>
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Floor</label><input type="text" placeholder="Ground Floor" class="w-full px-3 py-2.5 text-sm"></div>
+      </div>
+      <div>
+        <label class="text-xs text-stone-400 uppercase tracking-wider mb-2 block">Shifts</label>
+        <div class="flex flex-wrap gap-3">
+          <label class="flex items-center gap-2 text-sm text-stone-300 cursor-pointer"><input type="checkbox" checked class="accent-amber-400 w-4 h-4"> Morning</label>
+          <label class="flex items-center gap-2 text-sm text-stone-300 cursor-pointer"><input type="checkbox" checked class="accent-amber-400 w-4 h-4"> Evening</label>
+          <label class="flex items-center gap-2 text-sm text-stone-300 cursor-pointer"><input type="checkbox" class="accent-amber-400 w-4 h-4"> Full Day</label>
+          <label class="flex items-center gap-2 text-sm text-stone-300 cursor-pointer"><input type="checkbox" class="accent-amber-400 w-4 h-4"> Half Day</label>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Morning Start</label><input type="time" value="06:00" class="w-full px-3 py-2.5 text-sm"></div>
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Morning End</label><input type="time" value="12:00" class="w-full px-3 py-2.5 text-sm"></div>
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Evening Start</label><input type="time" value="14:00" class="w-full px-3 py-2.5 text-sm"></div>
+        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Evening End</label><input type="time" value="22:00" class="w-full px-3 py-2.5 text-sm"></div>
+      </div>
+      <div>
+        <label class="text-xs text-stone-400 uppercase tracking-wider mb-2 block">Monthly Fees (₹)</label>
+        <div class="grid grid-cols-3 gap-2">
+          <input type="number" placeholder="Morning" class="w-full px-3 py-2.5 text-sm text-center">
+          <input type="number" placeholder="Evening" class="w-full px-3 py-2.5 text-sm text-center">
+          <input type="number" placeholder="Full Day" class="w-full px-3 py-2.5 text-sm text-center">
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-stone-400 uppercase tracking-wider mb-2 block">Facilities</label>
+        <div class="flex flex-wrap gap-2">
+          ${['AC','WiFi','CCTV','Locker','Water','Printing'].map(f=>`<label class="flex items-center gap-1.5 text-xs text-stone-400 cursor-pointer bg-white/5 px-2.5 py-1.5 rounded-lg"><input type="checkbox" checked class="accent-amber-400 w-3.5 h-3.5"> ${f}</label>`).join('')}
+        </div>
+      </div>
+      <div class="flex gap-3 pt-1">
+        <button onclick="closeModal()" class="flex-1 py-3 rounded-xl text-sm text-stone-400" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">Cancel</button>
+        <button onclick="addHall()" class="flex-1 py-3 rounded-xl text-sm font-semibold text-stone-900" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Create Hall</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
+function checkBtn(){document.getElementById('menu-btn').style.display=window.innerWidth>=1024?'none':'flex'}
+checkBtn();window.addEventListener('resize',checkBtn);
+
+const halls=[
+  {id:1,name:'Hall A',branch:'Nagpur Main',seats:60,occ:47,shifts:['Morning','Evening'],time:'6AM–10PM',morning:'₹1,200',evening:'₹1,000',fullday:'₹2,000',status:'open',fac:['AC','WiFi','CCTV'],floor:'Ground'},
+  {id:2,name:'Hall B',branch:'Nagpur Main',seats:60,occ:55,shifts:['Full Day'],time:'6AM–10PM',morning:'₹1,500',evening:'₹1,200',fullday:'₹2,500',status:'full',fac:['AC','WiFi','Locker'],floor:'1st'},
+  {id:3,name:'Hall C',branch:'Civil Lines',seats:40,occ:28,shifts:['Morning','Evening'],time:'6AM–10PM',morning:'₹1,000',evening:'₹900',fullday:'₹1,800',status:'open',fac:['WiFi','Water'],floor:'Ground'},
+  {id:4,name:'Hall D',branch:'Civil Lines',seats:80,occ:61,shifts:['Morning','Evening','Full Day'],time:'6AM–10PM',morning:'₹1,300',evening:'₹1,100',fullday:'₹2,200',status:'open',fac:['AC','WiFi','CCTV','Locker'],floor:'2nd'},
+  {id:5,name:'Hall E',branch:'Sitabuldi',seats:50,occ:50,shifts:['Morning','Evening'],time:'6AM–10PM',morning:'₹1,100',evening:'₹950',fullday:'₹1,900',status:'full',fac:['AC','WiFi'],floor:'Ground'},
+  {id:6,name:'Hall F',branch:'Sitabuldi',seats:30,occ:18,shifts:['Morning'],time:'6AM–12PM',morning:'₹800',evening:'—',fullday:'—',status:'open',fac:['WiFi','Water'],floor:'Ground'},
+];
+
+function renderHalls(data){
+  const g=document.getElementById('halls-grid');
+  g.innerHTML=data.map(h=>{
+    const pct=Math.round(h.occ/h.seats*100);
+    const bc=pct>=95?'#ef4444':pct>=70?'#f59e0b':'#22c55e';
+    return`<div class="card hcard p-4 sm:p-5">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <div class="flex items-center gap-2 mb-0.5">
+            <span class="text-xl">🏛</span>
+            <div class="display text-base sm:text-lg font-bold text-stone-100">${h.name}</div>
+          </div>
+          <div class="text-xs text-stone-500">${h.branch} · ${h.floor} Floor</div>
+        </div>
+        <span class="${h.status==='full'?'bg-r':'bg-g'}">${h.status==='full'?'Full':'Open'}</span>
+      </div>
+      <div class="mb-3">
+        <div class="flex justify-between text-xs mb-1"><span class="text-stone-500">Occupancy</span><span class="text-stone-300 font-semibold">${h.occ}/${h.seats} (${pct}%)</span></div>
+        <div class="pb h-2"><div class="h-full rounded-full" style="width:${pct}%;background:${bc}"></div></div>
+      </div>
+      <div class="flex flex-wrap gap-1 mb-3">
+        ${h.shifts.map(s=>`<span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(201,168,76,0.1);color:#e8b84b;border:1px solid rgba(201,168,76,0.2)">${s}</span>`).join('')}
+        <span class="text-xs text-stone-600 self-center ml-1">⏰ ${h.time}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-1.5 mb-3">
+        ${[['Morning',h.morning],['Evening',h.evening],['Full Day',h.fullday]].map(([l,v])=>`<div class="text-center p-2 rounded-lg" style="background:rgba(255,255,255,0.04)"><div class="text-xs text-stone-500 mb-0.5">${l}</div><div class="text-xs font-bold text-stone-200">${v}</div></div>`).join('')}
+      </div>
+      <div class="flex flex-wrap gap-1 mb-4">
+        ${h.fac.map(f=>`<span class="text-xs px-2 py-0.5 rounded-full text-stone-500" style="background:rgba(255,255,255,0.04)">✓ ${f}</span>`).join('')}
+      </div>
+      <div class="flex gap-2">
+        <a href="admin-seats.html" class="flex-1 py-2 rounded-xl text-xs font-semibold text-stone-900 text-center" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">View Seats</a>
+        <button class="flex-1 py-2 rounded-xl text-xs font-semibold text-stone-300" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">Edit</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setBranch(i,btn){
+  document.querySelectorAll('.branch-btn').forEach(b=>{b.classList.remove('on')});
+  btn.classList.add('on');
+  const brs=['','Nagpur Main','Civil Lines','Sitabuldi'];
+  renderHalls(i===0?halls:halls.filter(h=>h.branch===brs[i]));
+}
+
+function closeModal(){document.getElementById('add-modal').classList.add('hidden');document.body.style.overflow=''}
+function addHall(){closeModal();toast('Hall created successfully!')}
+function toast(msg){const t=document.createElement('div');t.className='fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-6 sm:translate-x-0 px-5 py-3 rounded-xl text-sm font-semibold text-stone-900 z-50 shadow-lg';t.style='background:linear-gradient(135deg,#c9a84c,#e8b84b)';t.textContent='✓ '+msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}
+
+renderHalls(halls);
+</script>
+</body>
+</html>

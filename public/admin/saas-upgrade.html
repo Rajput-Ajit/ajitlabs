@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReadSpace – Upgrade Plan</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:#0e0e22;color:#e2e8f0;margin:0}
+  .display{font-family:'Playfair Display',serif}
+  #sidebar{position:fixed;top:0;left:0;height:100%;width:256px;background:#12122a;border-right:1px solid rgba(201,168,76,0.15);z-index:50;transform:translateX(-100%);transition:transform 0.3s ease;display:flex;flex-direction:column;overflow-y:auto}
+  #sidebar.open{transform:translateX(0)}
+  #overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:49;display:none}
+  #overlay.show{display:block}
+  @media(min-width:1024px){#sidebar{transform:translateX(0)}#overlay{display:none!important}#main{margin-left:256px}#menu-btn{display:none}}
+  .card{background:#1a1a35;border:1px solid rgba(255,255,255,0.06);border-radius:16px}
+  .nl{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;margin-bottom:2px;font-size:14px;font-weight:500;color:#94a3b8;transition:all 0.2s;text-decoration:none}
+  .nl:hover{background:rgba(255,255,255,0.05);color:#e2e8f0}
+  .nl.on{background:linear-gradient(135deg,#c9a84c,#e8b84b);color:#12122a;font-weight:700}
+  .topbar{background:#12122a;border-bottom:1px solid rgba(201,168,76,0.1);position:sticky;top:0;z-index:40}
+  /* Plan card */
+  .plan-card{background:#1a1a35;border:1px solid rgba(255,255,255,0.07);border-radius:20px;padding:24px;transition:all 0.3s;position:relative;overflow:hidden}
+  .plan-card:hover{transform:translateY(-4px);border-color:rgba(201,168,76,0.25)}
+  .plan-card.current{border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.04)}
+  .plan-card.popular{border-color:rgba(139,92,246,0.4);background:rgba(139,92,246,0.04)}
+  .plan-card.popular:hover{border-color:rgba(139,92,246,0.7)}
+  .feature-row{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px}
+  .check{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+  /* Billing toggle */
+  .bill-btn{padding:8px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;border:none}
+  .bill-btn.on{background:linear-gradient(135deg,#c9a84c,#e8b84b);color:#12122a}
+  .bill-btn.off{background:transparent;color:#64748b}
+  /* Modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px}
+  .modal-card{background:#1a1a35;border:1px solid rgba(201,168,76,0.35);border-radius:20px;width:100%;max-width:420px;padding:28px;position:relative;max-height:90vh;overflow-y:auto}
+  input,select{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;border-radius:10px}
+  input:focus,select:focus{outline:none;border-color:#c9a84c}
+  input::placeholder{color:#475569}
+  ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:#0e0e22}::-webkit-scrollbar-thumb{background:#c9a84c44;border-radius:2px}
+</style>
+</head>
+<body>
+<div id="overlay" onclick="closeSidebar()"></div>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside id="sidebar">
+  <div class="p-5 border-b border-amber-900/20 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center text-base font-black text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">R</div>
+      <div>
+        <div class="display text-amber-300 font-bold text-lg leading-none">ReadSpace</div>
+        <div class="text-stone-500 text-xs">Admin Panel</div>
+      </div>
+    </div>
+  </div>
+  <div class="px-4 py-3 border-b border-amber-900/10 flex-shrink-0">
+    <select class="w-full text-xs px-3 py-2 rounded-lg text-amber-300" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2)">
+      <option>🏛 Nagpur Main Branch</option><option>🏛 Civil Lines Branch</option><option>🏛 Sitabuldi Branch</option>
+    </select>
+  </div>
+  <nav class="p-3 flex-1">
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-1">Main</div>
+    <a href="admin-dashboard.html" class="nl">⊞ <span>Dashboard</span></a>
+    <a href="admin-halls.html" class="nl">🏛 <span>Manage Halls</span></a>
+    <a href="admin-seats.html" class="nl">🪑 <span>Seat Manager</span></a>
+    <a href="admin-students.html" class="nl">👥 <span>Students</span></a>
+    <a href="admin-fees.html" class="nl">💳 <span>Fees & Payments</span></a>
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-4">Config</div>
+    <a href="admin-branches.html" class="nl">📍 <span>Branches</span></a>
+    <a href="admin-shifts.html" class="nl">⏰ <span>Shift Timings</span></a>
+    <a href="admin-subscription.html" class="nl">⭐ <span>Subscription</span></a>
+    <a href="admin-settings.html" class="nl">⚙ <span>Settings</span></a>
+    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-4">My Plan</div>
+    <a href="saas-overview.html" class="nl">🚀 <span>Plan Overview</span></a>
+    <a href="saas-billing.html" class="nl">🧾 <span>Billing & Invoices</span></a>
+    <a href="saas-upgrade.html" class="nl on">⬆ <span>Upgrade Plan</span></a>
+    <a href="saas-usage.html" class="nl">📊 <span>Usage & Limits</span></a>
+  </nav>
+  <div class="p-4 border-t border-amber-900/10 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">RS</div>
+      <div class="flex-1 min-w-0"><div class="text-xs text-stone-200 font-medium truncate">Rahul Sharma</div><div class="text-xs text-stone-500">Super Admin</div></div>
+      <a href="admin-login.html" class="text-stone-500 hover:text-red-400 text-lg">⏻</a>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<div id="main" class="flex flex-col min-h-screen">
+  <header class="topbar px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
+    <button id="menu-btn" onclick="openSidebar()" class="w-9 h-9 flex items-center justify-center rounded-xl text-amber-400 hover:bg-white/5 flex-shrink-0">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+    </button>
+    <div class="flex-1 min-w-0">
+      <div class="display text-base sm:text-xl text-stone-100 font-bold">Upgrade Plan</div>
+      <div class="text-xs text-stone-500 hidden sm:block">Choose the right plan for your library</div>
+    </div>
+  </header>
+
+  <main class="flex-1 p-4 sm:p-6">
+
+    <!-- Billing toggle -->
+    <div class="flex items-center justify-center gap-1 mb-6" style="background:#12122a;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:4px;width:fit-content;margin:0 auto 24px">
+      <button id="btn-monthly" class="bill-btn on" onclick="setBilling('monthly')">Monthly</button>
+      <button id="btn-annual" class="bill-btn off" onclick="setBilling('annual')">
+        Annual <span class="text-xs ml-1 px-1.5 py-0.5 rounded-full font-semibold" style="background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.2)">-20%</span>
+      </button>
+    </div>
+
+    <!-- Plans grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6" id="plans-grid"></div>
+
+    <!-- Feature comparison table -->
+    <div class="card overflow-hidden">
+      <div class="p-4 sm:p-5 border-b border-white/5">
+        <div class="text-sm font-semibold text-stone-300">📋 Full Feature Comparison</div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full" style="border-collapse:separate;border-spacing:0;min-width:640px">
+          <thead>
+            <tr style="background:#12122a">
+              <th class="px-4 py-3 text-left text-xs text-stone-600 uppercase tracking-wider font-semibold w-1/3">Feature</th>
+              <th class="px-4 py-3 text-center text-xs text-stone-600 uppercase tracking-wider font-semibold">Free</th>
+              <th class="px-4 py-3 text-center text-xs text-stone-600 uppercase tracking-wider font-semibold">Starter</th>
+              <th class="px-4 py-3 text-center text-xs text-amber-500 uppercase tracking-wider font-semibold">Pro ← You</th>
+              <th class="px-4 py-3 text-center text-xs text-purple-400 uppercase tracking-wider font-semibold">Business</th>
+            </tr>
+          </thead>
+          <tbody id="feature-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="mt-5 space-y-2" id="faq-list"></div>
+
+  </main>
+</div>
+
+<!-- ═══ CHECKOUT MODAL ═══ -->
+<div id="checkout-modal" class="modal-bg hidden">
+  <div class="modal-card">
+    <button onclick="closeCheckout()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-stone-400 hover:text-stone-200 rounded-lg hover:bg-white/10 text-xl">✕</button>
+    <h3 class="display text-xl text-stone-100 font-bold mb-1" id="checkout-title">Upgrade to Business</h3>
+    <p class="text-xs text-stone-500 mb-5" id="checkout-sub">You'll be charged the prorated difference today.</p>
+    <div id="checkout-summary" class="p-4 rounded-xl mb-4" style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2)"></div>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Card Number</label>
+        <input type="text" placeholder="Visa •••• 4242 (on file)" class="w-full px-3 py-2.5 text-sm" readonly style="color:#94a3b8">
+      </div>
+      <div class="p-3 rounded-xl text-xs text-stone-500" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)">🔒 Payment secured via Razorpay · PCI DSS compliant</div>
+      <div class="flex gap-3 pt-1">
+        <button onclick="closeCheckout()" class="flex-1 py-3 rounded-xl text-sm text-stone-400" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">Cancel</button>
+        <button onclick="confirmUpgrade()" class="flex-1 py-3 rounded-xl text-sm font-semibold text-stone-900" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)" id="confirm-btn">Confirm Upgrade</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
+function checkBtn(){document.getElementById('menu-btn').style.display=window.innerWidth>=1024?'none':'flex'}
+checkBtn();window.addEventListener('resize',checkBtn);
+
+let billing='monthly';
+function setBilling(b){
+  billing=b;
+  document.getElementById('btn-monthly').className='bill-btn '+(b==='monthly'?'on':'off');
+  document.getElementById('btn-annual').className='bill-btn '+(b==='annual'?'on':'off');
+  renderPlans();
+}
+
+const plans=[
+  {id:'free',name:'Free',icon:'🌱',desc:'Get started with one branch',monthly:0,annual:0,color:'#64748b',branches:1,students:50,halls:1,sms:50,features:['1 Branch','50 Students','1 Hall','Basic Dashboard','Email Support'],locked:['SMS Alerts','Analytics','Multiple Admins','Custom Branding','API Access','Priority Support'],current:false},
+  {id:'starter',name:'Starter',icon:'📖',desc:'Perfect for single-location libraries',monthly:799,annual:639,color:'#22c55e',branches:2,students:200,halls:5,sms:200,features:['2 Branches','200 Students','5 Halls','Fee Management','Shift Timings','100 SMS/month','Email Support'],locked:['Analytics','Multiple Admins','Custom Branding','API Access','Priority Support'],current:false},
+  {id:'pro',name:'Pro',icon:'🚀',desc:'For growing multi-branch libraries',monthly:2499,annual:1999,color:'#c9a84c',branches:5,students:500,halls:999,sms:500,popular:false,features:['5 Branches','500 Students','Unlimited Halls','Full Analytics','5 Admin Accounts','500 SMS/month','Priority Support','Data Export'],locked:['Custom Branding','API Access','WhatsApp Alerts'],current:true},
+  {id:'business',name:'Business',icon:'🏢',desc:'Enterprise-grade for large chains',monthly:5999,annual:4799,color:'#8b5cf6',branches:999,students:999,halls:999,sms:2000,features:['Unlimited Branches','Unlimited Students','Unlimited Halls','Full Analytics','Unlimited Admins','2000 SMS/month','WhatsApp Alerts','Custom Branding','API Access','Dedicated Support','SLA Guarantee'],locked:[],current:false},
+];
+
+function renderPlans(){
+  const g=document.getElementById('plans-grid');
+  g.innerHTML=plans.map(p=>{
+    const price=billing==='annual'?p.annual:p.monthly;
+    const isCurrent=p.current;
+    const isDowngrade=p.id==='free'||p.id==='starter';
+    return`<div class="plan-card ${isCurrent?'current':p.id==='business'?'popular':''}">
+      ${p.id==='business'?'<div class="absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full font-bold" style="background:rgba(139,92,246,0.2);color:#a78bfa;border:1px solid rgba(139,92,246,0.3)">Best Value</div>':''}
+      ${isCurrent?'<div class="absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full font-bold" style="background:rgba(201,168,76,0.2);color:#e8b84b;border:1px solid rgba(201,168,76,0.3)">Current</div>':''}
+      <div class="text-2xl mb-2">${p.icon}</div>
+      <div class="display text-lg font-bold mb-1" style="color:${p.color}">${p.name}</div>
+      <div class="text-xs text-stone-500 mb-4">${p.desc}</div>
+      <div class="mb-4">
+        ${price===0?`<div class="display text-3xl font-black text-stone-100">Free</div><div class="text-xs text-stone-600 mt-0.5">Forever</div>`:
+        `<div class="display text-3xl font-black text-stone-100">₹${price.toLocaleString()}<span class="text-base font-normal text-stone-500">/mo</span></div>
+        <div class="text-xs text-stone-600 mt-0.5">${billing==='annual'?'Billed annually · 20% off':'Billed monthly'}</div>`}
+      </div>
+      <div class="space-y-1.5 mb-5">
+        ${p.features.map(f=>`<div class="feature-row"><div class="check" style="background:${p.color}22;color:${p.color}">✓</div><span class="text-stone-300">${f}</span></div>`).join('')}
+        ${p.locked.slice(0,2).map(f=>`<div class="feature-row"><div class="check" style="background:rgba(100,116,139,0.1);color:#475569">✕</div><span class="text-stone-600">${f}</span></div>`).join('')}
+      </div>
+      ${isCurrent
+        ?`<div class="w-full py-2.5 rounded-xl text-sm font-semibold text-center text-amber-400" style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2)">✓ Current Plan</div>`
+        :isDowngrade
+        ?`<button onclick="toast('Contact support to downgrade your plan')" class="w-full py-2.5 rounded-xl text-sm font-semibold text-stone-500" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)">Downgrade</button>`
+        :`<button onclick="openCheckout('${p.id}')" class="w-full py-2.5 rounded-xl text-sm font-semibold text-stone-900" style="background:linear-gradient(135deg,${p.color},${p.id==='business'?'#7c3aed':'#e8b84b'})">Upgrade to ${p.name}</button>`
+      }
+    </div>`;
+  }).join('');
+}
+
+const featureRows=[
+  {label:'Branches',free:'1',starter:'2',pro:'5',biz:'Unlimited'},
+  {label:'Students',free:'50',starter:'200',pro:'500',biz:'Unlimited'},
+  {label:'Reading Halls',free:'1',starter:'5',pro:'Unlimited',biz:'Unlimited'},
+  {label:'Admin Accounts',free:'1',starter:'2',pro:'5',biz:'Unlimited'},
+  {label:'SMS Alerts/month',free:'50',starter:'200',pro:'500',biz:'2,000'},
+  {label:'WhatsApp Alerts',free:false,starter:false,pro:false,biz:true},
+  {label:'Analytics Dashboard',free:false,starter:false,pro:true,biz:true},
+  {label:'Data Export (CSV)',free:false,starter:true,pro:true,biz:true},
+  {label:'Custom Branding',free:false,starter:false,pro:false,biz:true},
+  {label:'API Access',free:false,starter:false,pro:false,biz:true},
+  {label:'Priority Support',free:false,starter:false,pro:true,biz:true},
+  {label:'Dedicated Manager',free:false,starter:false,pro:false,biz:true},
+  {label:'SLA Guarantee',free:false,starter:false,pro:false,biz:true},
+];
+
+document.getElementById('feature-tbody').innerHTML=featureRows.map(r=>{
+  function cell(v,isPro,isBiz){
+    if(v===true)return`<td class="px-4 py-3 text-center"><div class="w-5 h-5 rounded-full mx-auto flex items-center justify-center text-xs" style="background:${isBiz?'rgba(139,92,246,0.15)':isPro?'rgba(201,168,76,0.15)':'rgba(34,197,94,0.15)'};color:${isBiz?'#a78bfa':isPro?'#e8b84b':'#4ade80'}">✓</div></td>`;
+    if(v===false)return`<td class="px-4 py-3 text-center"><div class="w-5 h-5 rounded-full mx-auto flex items-center justify-center text-xs" style="background:rgba(100,116,139,0.1);color:#374151">✕</div></td>`;
+    return`<td class="px-4 py-3 text-center text-xs font-semibold" style="color:${isBiz?'#a78bfa':isPro?'#e8b84b':''}">${v}</td>`;
+  }
+  return`<tr><td class="px-4 py-3 text-sm text-stone-400">${r.label}</td>${cell(r.free,false,false)}${cell(r.starter,false,false)}${cell(r.pro,true,false)}${cell(r.biz,false,true)}</tr>`;
+}).join('');
+
+const faqs=[
+  {q:'Can I upgrade mid-month?',a:'Yes! You\'ll be charged a prorated amount for the remainder of the billing cycle. No waiting needed.'},
+  {q:'What happens to my data if I downgrade?',a:'Your data stays safe. If you exceed the new plan\'s limits (e.g., more branches than allowed), those will be locked but not deleted.'},
+  {q:'Can I cancel anytime?',a:'Absolutely. Cancel from Plan Overview. Your plan stays active until the end of the billing period — no early cancellation fees.'},
+  {q:'Do you offer a free trial?',a:'Yes! Every new account starts on Free plan with no time limit. Upgrade whenever you\'re ready.'},
+];
+document.getElementById('faq-list').innerHTML=`<div class="text-sm font-semibold text-stone-400 mb-2 px-1">❓ Frequently Asked Questions</div>`+faqs.map((f,i)=>`
+  <div class="card p-4 cursor-pointer" onclick="toggleFaq(${i})">
+    <div class="flex items-center justify-between gap-3">
+      <div class="text-sm font-medium text-stone-200">${f.q}</div>
+      <div id="faq-icon-${i}" class="text-stone-500 text-xl flex-shrink-0 transition-transform">⌄</div>
+    </div>
+    <div id="faq-ans-${i}" class="text-sm text-stone-500 mt-2 hidden leading-relaxed">${f.a}</div>
+  </div>
+`).join('');
+
+function toggleFaq(i){
+  const el=document.getElementById('faq-ans-'+i);
+  const ic=document.getElementById('faq-icon-'+i);
+  el.classList.toggle('hidden');
+  ic.style.transform=el.classList.contains('hidden')?'':'rotate(180deg)';
+}
+
+let selectedPlan=null;
+function openCheckout(id){
+  selectedPlan=id;
+  const p=plans.find(x=>x.id===id);
+  const price=billing==='annual'?p.annual:p.monthly;
+  document.getElementById('checkout-title').textContent=`Upgrade to ${p.name}`;
+  document.getElementById('checkout-sub').textContent=billing==='annual'?'Billed annually · 20% savings':'Billed monthly · cancel anytime';
+  document.getElementById('checkout-summary').innerHTML=`
+    <div class="flex justify-between text-sm mb-2"><span class="text-stone-400">ReadSpace ${p.name} Plan</span><span class="text-stone-200 font-semibold">₹${price.toLocaleString()}/mo</span></div>
+    <div class="flex justify-between text-xs mb-2 text-stone-500"><span>GST 18%</span><span>₹${Math.round(price*0.18).toLocaleString()}</span></div>
+    <div class="flex justify-between text-xs mb-2 text-stone-500"><span>Prorated credit (current plan)</span><span class="text-green-400">-₹643</span></div>
+    <div class="border-t border-white/10 my-2"></div>
+    <div class="flex justify-between text-sm font-bold"><span class="text-stone-200">Due today</span><span class="text-amber-300">₹${Math.round(price*1.18-643).toLocaleString()}</span></div>
+  `;
+  document.getElementById('checkout-modal').classList.remove('hidden');
+  document.body.style.overflow='hidden';
+}
+function closeCheckout(){document.getElementById('checkout-modal').classList.add('hidden');document.body.style.overflow=''}
+function confirmUpgrade(){
+  const p=plans.find(x=>x.id===selectedPlan);
+  closeCheckout();
+  toast(`Upgraded to ${p.name} Plan! Refreshing…`);
+  setTimeout(()=>window.location.href='saas-overview.html',2000);
+}
+
+function toast(msg){const t=document.createElement('div');t.className='fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-6 sm:translate-x-0 px-5 py-3 rounded-xl text-sm font-semibold z-50 shadow-lg';t.style='background:linear-gradient(135deg,#c9a84c,#e8b84b);color:#12122a';t.textContent='✓ '+msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2800)}
+
+renderPlans();
+</script>
+</body>
+</html>

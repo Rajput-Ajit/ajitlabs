@@ -549,10 +549,10 @@ RHLoader.stop();
           <!-- Stats bar -->
           <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
             <div class="flex gap-4 sm:gap-6">
-              <div class="text-center"><div id="s-empty" class="text-lg sm:text-2xl font-bold text-blue-400">0</div><div class="text-xs text-stone-500">Empty</div></div>
-              <div class="text-center"><div id="s-occ" class="text-lg sm:text-2xl font-bold text-red-400">0</div><div class="text-xs text-stone-500">Occupied</div></div>
-              <div class="text-center"><div id="s-half" class="text-lg sm:text-2xl font-bold text-amber-400">0</div><div class="text-xs text-stone-500">Half-day</div></div>
-              <div class="text-center"><div id="s-tot" class="text-lg sm:text-2xl font-bold text-stone-300">0</div><div class="text-xs text-stone-500">Total</div></div>
+              <div class="text-center"><div id="s-empty" data-stat="empty" class="text-lg sm:text-2xl font-bold text-blue-400">0</div><div class="text-xs text-stone-500">Empty</div></div>
+              <div class="text-center"><div id="s-occ" data-stat="occupied" class="text-lg sm:text-2xl font-bold text-red-400">0</div><div class="text-xs text-stone-500">Occupied</div></div>
+              <div class="text-center"><div id="s-half" data-stat="half" class="text-lg sm:text-2xl font-bold text-amber-400">0</div><div class="text-xs text-stone-500">Half-day</div></div>
+              <div class="text-center"><div id="s-tot" data-stat="total" class="text-lg sm:text-2xl font-bold text-stone-300">0</div><div class="text-xs text-stone-500">Total</div></div>
             </div>
             <!-- legend -->
             <div class="flex flex-wrap gap-2 text-xs text-stone-400">
@@ -748,6 +748,34 @@ RHLoader.stop();
   </form>
 </div>
 
+
+<!--  Release Seat Confirmation  -->
+<div id="confirm-modal" class="hidden fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+
+  <div class="bg-[#1f1f1f] rounded-xl p-5 w-80 text-center">
+
+    <h2 class="text-red-400 text-lg font-bold mb-2">⚠ Danger</h2>
+
+    <p id="confirm-text" class="text-stone-300 text-sm mb-4">
+      Are you sure?
+    </p>
+
+    <div class="flex gap-2">
+      <button onclick="closeConfirmModal()"
+        class="flex-1 py-2 rounded-lg bg-stone-700 text-stone-200 text-sm">
+        Cancel
+      </button>
+
+      <button id="confirm-btn"
+        class="flex-1 py-2 rounded-lg bg-red-500 text-white text-sm">
+        Yes, Release
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
 <script>
   /*
   GLOBAL USE EVERYWHERE IN PAGE *SEATS
@@ -859,7 +887,7 @@ function renderSeatModal(seat) {
         Valid till: ${o.end_date}
       </div>
 
-      <button onclick="releaseSeatStudent(${seat.id}, ${index})"
+      <button onclick="openConfirmModal(${o.allocation_id}, ${o.student_id})"
         class="w-full py-1.5 text-xs rounded bg-red-500/10 border border-red-400/30 text-red-400 hover:bg-red-500/20">
         Release Seat
       </button>
@@ -982,6 +1010,36 @@ function _populateShiftDropdown() {
       ${Format.shiftLabel(s.code)} — ${Format.currency(s.monthly_fee)}/mo
     </option>
   `).join('');
+}
+
+//-----------             RELEASE SEAT      ---------------------------
+function openConfirmModal(allocationId, studentId){
+  if(!allocationId || !studentId) return;
+  
+  // set message
+  document.getElementById('confirm-text').textContent =
+    `Release seat ? This action cannot be undone.`;
+
+  // attach action
+  document.getElementById('confirm-btn').onclick = function () {
+    // close seat data model
+    closeSeatModal();
+    closeConfirmModal();
+    releaseSeat(allocationId, studentId);
+  };
+  
+  // show modal
+  document.getElementById('confirm-modal').classList.remove('hidden');
+
+  // stop scroll
+  document.body.style.overflow = 'hidden';
+}
+
+function closeConfirmModal(){
+  document.getElementById('confirm-modal').classList.add('hidden');
+
+  // allow scroll again
+  document.body.style.overflow = 'auto';
 }
 
 </script>

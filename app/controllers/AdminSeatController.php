@@ -33,4 +33,12 @@ class AdminSeatController
             $this->service->assign($data, $user)
         );
     }
+
+    public function release($data)
+    {
+        $user = $_REQUEST['user'];
+        Response::success(
+            $this->service->release($data, $user)
+        );
+    }
 }

@@ -78,9 +78,10 @@ async function loadSeats(hallId = null) {
 
     // render seats
     renderSeats(seatsData);
+    _renderStats(res.stats);
     /*
     _renderHallDropdown(res.halls, res.selected_hall_id);
-    _renderStats(res.stats);
+    
     _renderSeatGrid(res.data, res.selected_hall_id);
     */
     // filer button selected all default
@@ -124,80 +125,6 @@ function _renderStats(stats) {
   });
 }
 
-// ─── Assign modal ─────────────────────────────────────────────────────────────
-/*
-function openAssignModal(seatId, hallId) {
-  const modal  = Dom.el('#assign-modal');
-  const form   = Dom.el('#assign-form');
-  if (!modal || !form) return;
-
-  // Pre-fill hidden fields
-  const seatInput = form.querySelector('[name="seat_id"]');
-  const hallInput = form.querySelector('[name="hall_id"]');
-  if (seatInput) seatInput.value = seatId;
-  if (hallInput) hallInput.value = hallId;
-
-  // Set today as default start_date
-  const dateInput = form.querySelector('[name="start_date"]');
-  if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
-
-  // Set selected hall's shifts into the shift dropdown
-  _populateShiftDropdown(hallId);
-
-  Form.clearErrors(form);
-  Form.reset(form);
-  // Re-set hidden fields after reset
-  if (seatInput) seatInput.value = seatId;
-  if (hallInput) hallInput.value = hallId;
-  if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
-
-  // Open modal (supports both <dialog> and div modal)
-  if (typeof modal.showModal === 'function') {
-    modal.showModal();
-  } else {
-    Dom.show(modal);
-  }
-}
-
-function closeModal() {
-  const modal = Dom.el('#assign-modal');
-  if (!modal) return;
-  if (typeof modal.close === 'function') {
-    modal.close();
-  } else {
-    Dom.hide(modal);
-  }
-}
-
-// Populate shift <select> from loaded hall data
-function _populateShiftDropdown(hallId) {
-  const shiftSelect = Dom.el('[name="shift"]');
-  if (!shiftSelect) return;
-
-  // Try to read shifts from hall dropdown data attribute
-  const hallOption = Dom.el(`#hall-select option[value="${hallId}"]`);
-  const shiftsJson = hallOption?.dataset?.shifts;
-
-  if (shiftsJson) {
-    try {
-      const shifts = JSON.parse(shiftsJson);
-      shiftSelect.innerHTML = shifts.map(s => `
-        <option value="${s.code}">
-          ${Format.shiftLabel(s.code)} — ${Format.currency(s.monthly_fee)}/mo
-        </option>
-      `).join('');
-      return;
-    } catch (_) {}
-  }
-
-  // Fallback: standard shifts
-  shiftSelect.innerHTML = `
-    <option value="morning">Morning</option>
-    <option value="evening">Evening</option>
-    <option value="fullday">Full Day</option>
-  `;
-}
-*/
 // ─── Assign seat form submit ──────────────────────────────────────────────────
 
 async function handleAssign(e) {
@@ -386,6 +313,36 @@ function renderFilteredSeats(filterType){
   });
 }
 
+// -----------------           Release Seat       ---------------------
+
+async function releaseSeat(allocationId, studentId) {
+  
+  // Convert numeric fields
+  const _allocationId = parseInt(allocationId);
+  const _studentId = parseInt(studentId);
+  
+  const btn  = Dom.el('#confirm-btn');
+  btn.disabled = true;
+  btn.textContent = 'Releasing...';
+  try {
+    const body = (_allocationId && _studentId) ? { allocation_id: _allocationId, student_id : _studentId} : {};
+
+    await Api.post('/app/api/admin.release.seat.php', body, {
+      toast:      true,
+      loader: true,
+      successMsg: 'Seat Release successfully!',
+    });
+
+    // Reload the seat grid to reflect the new booking
+    await loadSeats(window._selected_hall_id);
+
+  } catch (error) {
+    console.log(error);
+  }finally {
+    btn.disabled = false;
+    btn.textContent = 'Yes, Relsease';
+  }
+}
 
 // ---------           JQUERY      _------------------
 // ----------     Filter  ------------------------

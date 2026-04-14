@@ -113,4 +113,23 @@ class SeatValidator
 
         return true;
     }
+
+    // release seat validation
+    public static function releaseSeat($data){
+        $v = self::validator();
+
+        $v->required('Allocation ID', $data['allocation_id'] ?? null)
+          ->numeric('Allocation ID', $data['allocation_id'] ?? null)
+          ->greaterThan('Allocation ID', $data['allocation_id'] ?? null, 0)
+
+          ->required('Student ID', $data['student_id'] ?? null)
+          ->numeric('Student ID', $data['student_id'] ?? null)
+          ->greaterThan('Student ID', $data['student_id'] ?? null, 0);
+        
+        if ($v->hasErrors()) {
+            Response::error($v->firstError(), 422);
+        }
+
+        return true;
+    }
 }

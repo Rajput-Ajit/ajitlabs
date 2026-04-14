@@ -175,6 +175,7 @@ class SeatModel
         $hallIdInt = (int)$hallId;
         $allocResult = $this->conn->query("
             SELECT 
+                sa.id AS allocation_id,
                 sa.seat_id,
                 sh.code as shift_code,
                 sh.name as shift_name,
@@ -289,10 +290,17 @@ class SeatModel
             INSERT INTO seat_allocations 
             (student_id, seat_id, shift_id, hall_id, branch_id, start_date, end_date, status, booked_by_type, booked_by_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)
+
+            ON DUPLICATE KEY UPDATE
+                student_id = VALUES(student_id),
+                end_date = VALUES(end_date),
+                booked_by_type = VALUES(booked_by_type),
+                booked_by_id = VALUES(booked_by_id),
+                status = 'active'
         ");
 
         $stmt->bind_param(
-            "iiiiiissi",
+            "iiiiisssi",
             $studentId,
             $seatId,
             $shiftId,
@@ -308,7 +316,7 @@ class SeatModel
 
         return $this->conn->insert_id;
     }
-
+    
     public function getShifts($hallId){
         $query = "SELECT 
                     id,
@@ -346,6 +354,39 @@ class SeatModel
         $stmt->close();
 
         return $data;
+    }
+
+    // get allocation data before release
+    public function getAllocationId($allocationID, $studentId){
+        $stmt = $this->conn->prepare("
+            SELECT id FROM seat_allocations
+            WHERE id = ?
+            AND student_id = ?
+            AND status = 'active'
+            LIMIT 1
+        ");
+
+        $stmt->bind_param("ii", $allocationID, $studentId);
+        $stmt->execute();
+
+        return $stmt->get_result()->num_rows > 0;
+    }
+
+    // release seat
+    public function releaseSeat($allocationID, $studentId){
+        $stmt = $this->conn->prepare("
+            UPDATE seat_allocations
+            SET status = 'cancelled'
+            WHERE id = ?
+            AND student_id = ?
+            AND status = 'active'
+        ");
+
+        $stmt->bind_param("ii", $allocationID, $studentId);
+        $stmt->execute();
+
+        // Check if any row was actually updated
+        return $stmt->affected_rows > 0;
     }
 }
 ?>

@@ -311,5 +311,35 @@ class AdminSeatService
             'receipt'     => "ADM{$adminId}-" . date('Y') . '-...' // receipt_number from fee
         ];
     }
+
+    public function release($data, $admin)
+    {
+        App::useMany(['seatModel']);
+
+        $seatModel    = new SeatModel();
+        
+        $adminId  = $admin['user_id'];
+        
+        $allocationID   = $data['allocation_id'];
+        $studentId     = $data['student_id'];
+        
+        // =========================================================
+        // 1. GET SEAT Allocation + VALIDATE
+        // =========================================================
+        $seat = $seatModel->getAllocationId($allocationID, $studentId);
+
+        if (!$seat) {
+            Response::error("Seat not found", 404);
+        }
+
+        // =========================================================
+        // 2. Releas Seat (Update Seat Allocation status = cancelled)
+        // =========================================================
+        $release = $seatModel->releaseSeat($allocationID, $studentId);
+
+        if(!$release) Response::error("Failed To Release Seat", 409);
+
+        return ["message" => "Seat Release Successfully"];
+    }
 }
 ?>

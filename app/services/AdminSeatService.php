@@ -127,9 +127,14 @@ class AdminSeatService
             $seat['occupants'] = $activeShifts;
         }
 
+
+        // shifts selected hall
+        $hallShifts = $this->seatModel->getShifts($hallId);
+
         return [
             'selected_hall_id' => $hallId,
             'halls'            => $hallOptions,
+            "hall_shifts"      => $hallShifts,
             'stats'            => [
                 'empty'    => $empty,
                 'occupied' => $occupied,

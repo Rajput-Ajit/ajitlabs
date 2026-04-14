@@ -308,5 +308,44 @@ class SeatModel
 
         return $this->conn->insert_id;
     }
+
+    public function getShifts($hallId){
+        $query = "SELECT 
+                    id,
+                    hall_id,
+                    name,
+                    code,
+                    start_time,
+                    end_time,
+                    monthly_fee
+                FROM shifts
+                WHERE hall_id = ?
+                AND is_active = 1
+                ORDER BY display_order ASC";
+
+        // Prepare statement
+        $stmt = $this->conn->prepare($query);
+
+        if (!$stmt) {
+            return ['error' => $this->conn->error];
+        }
+
+        // Bind parameter (i = integer)
+        $stmt->bind_param("i", $hallId);
+
+        // Execute
+        $stmt->execute();
+
+        // Get result
+        $result = $stmt->get_result();
+
+        // Fetch all data
+        $data = $result->fetch_all(MYSQLI_ASSOC);
+
+        // Close statement
+        $stmt->close();
+
+        return $data;
+    }
 }
 ?>

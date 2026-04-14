@@ -44,10 +44,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Assign form submit
-  Dom.on('#assign-form', 'submit', handleAssign);
+  //Dom.on('#assign-form', 'submit', handleAssign);
 
   // Close modal
-  Dom.on('#modal-close-btn', 'click', closeModal);
+  //Dom.on('#modal-close-btn', 'click', closeModal);
 
   // Logout
   Dom.on('#logout-btn', 'click', () => Api.logout('admin'));
@@ -64,20 +64,46 @@ async function loadSeats(hallId = null) {
       loader: true,
       toast:  false,
     });
+    // selected hall shifts
+    window.global_hall_shifts = res?.hall_shifts ?? [];
+    
+    seatsData = res?.data || [];
+    // render hall dropdown
+    _renderHallDropdown(res?.halls ?? [], res?.selected_hall_id ?? null);
+    // find hall name and store
+    const selectedHall = res.halls.find(h => h.id == res?.selected_hall_id);
+    // store name
+    window._selectedHallName = selectedHall ? selectedHall.name : null;
+    
 
+    // render seats
+    renderSeats(seatsData);
+    /*
     _renderHallDropdown(res.halls, res.selected_hall_id);
     _renderStats(res.stats);
     _renderSeatGrid(res.data, res.selected_hall_id);
+    */
+    // filer button selected all default
+    document.querySelectorAll('.fb').forEach(b => b.classList.remove('on'));
+    document.querySelector('.fb')?.classList.add('on');
 
-  } catch (_) {
+    // onchange 
+    document.getElementById('hallSel').addEventListener('change', (e) => {
+      loadSeats(e.target.value);
+    });
+
+  } catch (err) {
     // Error shown by Api.post
+    console.error(err);
   }
 }
 
 // ─── Hall dropdown ────────────────────────────────────────────────────────────
 
 function _renderHallDropdown(halls, selectedId) {
-  const select = Dom.el('#hall-select');
+  window._selected_hall_id = selectedId;
+  
+  const select = Dom.el('#hallSel');
   if (!select || !halls) return;
 
   select.innerHTML = halls.map(h => `
@@ -98,64 +124,8 @@ function _renderStats(stats) {
   });
 }
 
-// ─── Seat grid ────────────────────────────────────────────────────────────────
-
-const STATUS_COLOR = {
-  empty:   '#22c55e',  // green
-  morning: '#eab308',  // yellow
-  evening: '#3b82f6',  // blue
-  fullday: '#ef4444',  // red
-  removed: '#6b7280',  // grey
-};
-
-function _renderSeatGrid(seats, hallId) {
-  const grid = Dom.el('#seat-grid');
-  if (!grid) return;
-
-  if (!seats || seats.length === 0) {
-    Dom.html(grid, '<p style="color:#888;text-align:center;padding:40px">No seats found.</p>');
-    return;
-  }
-
-  Dom.html(grid, seats.map(seat => {
-    const color   = STATUS_COLOR[seat.status] || '#6b7280';
-    const isEmpty = seat.status === 'empty';
-    const label   = seat.label || seat.seat_number;
-
-    // Tooltip: show occupant names for occupied seats
-    const occupants = (seat.occupants || [])
-      .map(o => `${Format.shiftLabel(o.shift_code)}: ${o.first_name} ${o.last_name || ''} (${Format.date(o.end_date)})`)
-      .join('\n');
-
-    return `
-      <div class="seat-cell ${seat.status}"
-           data-seat-id="${seat.id}"
-           data-hall-id="${hallId}"
-           data-status="${seat.status}"
-           title="${occupants || label}"
-           style="
-             background: ${color}22;
-             border: 2px solid ${color};
-             border-radius: 8px;
-             padding: 10px 6px;
-             text-align: center;
-             font-size: 12px;
-             font-weight: 600;
-             color: ${color};
-             cursor: ${isEmpty ? 'pointer' : 'default'};
-             transition: transform 0.15s, box-shadow 0.15s;
-             user-select: none;
-           "
-           ${isEmpty ? 'role="button" tabindex="0"' : ''}
-           onclick="${isEmpty ? `openAssignModal(${seat.id}, ${hallId})` : ''}">
-        ${Dom._escape(label)}
-      </div>
-    `;
-  }).join(''));
-}
-
 // ─── Assign modal ─────────────────────────────────────────────────────────────
-
+/*
 function openAssignModal(seatId, hallId) {
   const modal  = Dom.el('#assign-modal');
   const form   = Dom.el('#assign-form');
@@ -227,7 +197,7 @@ function _populateShiftDropdown(hallId) {
     <option value="fullday">Full Day</option>
   `;
 }
-
+*/
 // ─── Assign seat form submit ──────────────────────────────────────────────────
 
 async function handleAssign(e) {
@@ -252,15 +222,20 @@ async function handleAssign(e) {
       successMsg: 'Seat assigned successfully!',
     });
 
-    closeModal();
+    closeAssignModal();
 
+    // rest form
+    Form.reset(form);
+    Form.enable(btn, 'Save Seat');
     // Reload the seat grid to reflect the new booking
     await loadSeats(body.hall_id);
 
-  } catch (_) {
+  } catch (error) {
+    console.log(error);
     Form.enable(btn, 'Assign Seat');
   }
 }
+
 
 // Attach to window so inline onclick can reach it
 window.openAssignModal = openAssignModal;
@@ -271,3 +246,175 @@ Dom._escape = Dom._escape || function(str) {
   d.appendChild(document.createTextNode(String(str || '')));
   return d.innerHTML;
 };
+
+// ---------   AJIT      ----------------
+
+// ------  Render Seats   ---------------
+function renderSeats(seatsData = []){
+  // empty grid
+    grid.innerHTML = "";
+    seatsData.forEach((value) =>{
+      seatMap[value.id] = value;
+      const seat_number = value?.seat_number ?? '';
+      
+      if (value.status == 'fullday') {
+        // has occupants
+        if(value.active_shifts.length == 1){
+          grid.appendChild(fullSeat({seat: seat_number, seatId : value.id}));
+        }else{
+          // occupied in 2 slot
+          grid.appendChild(halfSeat({seat: seat_number, seatId : value.id}));
+        }
+      }else if(value.status == 'morning'){
+          // morning
+          grid.appendChild(morningSeat({seat: seat_number, seatId : value.id}));
+      }else if(value.status == 'evening'){
+        // evening
+        grid.appendChild(eveningSeat({seat: seat_number, seatId : value.id}));
+      }else{
+        // empty seat
+          grid.appendChild(emptySeat({seat: seat_number, seatId : value.id}));
+      }
+        
+    });
+}
+
+function emptySeat({seat, seatId}, opacity = 1){
+  // empty
+  const empty=document.createElement('div');
+    empty.className=`seat empty`;
+    empty.style.opacity = `${opacity}`;
+    empty.dataset.id = seatId;   
+    empty.innerHTML=`${Dom._escape(seat)}`;
+  return empty;
+}
+
+function morningSeat({seat, seatId}, opacity = 1){
+// for morning
+  const morning=document.createElement('div');
+    morning.className=`seat morn`;
+    morning.style.opacity = `${opacity}`;
+    morning.dataset.id = seatId;
+    morning.innerHTML=`${Dom._escape(seat)} <span class="seatdot bg-indigo-400"></span>`;
+  return morning;
+}
+function eveningSeat({seat, seatId}, opacity = 1){
+  const evening=document.createElement('div');
+    evening.className=`seat eve`;
+    evening.style.opacity = `${opacity}`;
+    evening.dataset.id = seatId;
+    evening.innerHTML=`${Dom._escape(seat)}<span class="seatdot bg-orange-400"></span>`;
+  return evening;
+}
+
+function fullSeat({seat, seatId}, opacity = 1){
+  // full day
+  const full=document.createElement('div');
+    full.className=`seat occ`;
+    full.style.opacity= `${opacity}`;
+    full.dataset.id = seatId;
+    full.innerHTML=`${Dom._escape(seat)} <span class="seatdot bg-green-400"></span>`;
+  return full;
+}
+
+function halfSeat({seat, seatId} , opacity = 1){
+  // half 
+  const half=document.createElement('div');
+    half.className=`seat half`;
+    half.style.opacity = `${opacity}`;
+    half.dataset.id = seatId;
+    half.innerHTML=`${Dom._escape(seat)}<span class="seatdot bg-amber-400"></span>`;
+  return half;
+}
+
+
+// -- -- selected seat all / empty / occupied / half day   ------------------
+function renderFilteredSeats(filterType){
+  grid.innerHTML = "";
+
+  seatsData.forEach((value) => {
+    const seat_number = value?.seat_number ?? '';
+
+    const isEmpty = value.status === 'empty';
+    const isFull = value.status === 'fullday';
+    const isMorning = value.status === 'morning';
+    const isEvening = value.status === 'evening';
+
+    // 🎯 CHECK if seat should be ACTIVE
+    let isActive = false;
+
+    if (filterType === 'all') {
+      isActive = true;
+    } 
+    else if (filterType === 'empty' && isEmpty) {
+      isActive = true;
+    } 
+    else if (filterType === 'occupied' && !isEmpty) {
+      isActive = true;
+    } 
+    else if (filterType === 'half' && (isMorning || isEvening)) {
+      isActive = true;
+    }
+
+    // 🎨 CREATE SEAT NODE
+    let seatEl;
+
+    if (isEmpty) {
+      seatEl = emptySeat({seat: seat_number, seatId: value.id});
+    } 
+    else if (isFull) {
+      if (value.active_shifts.length === 2) {
+        seatEl = halfSeat({seat: seat_number, seatId: value.id});
+      } else {
+        seatEl = fullSeat({seat: seat_number, seatId: value.id});
+      }
+    } 
+    else if (isMorning) {
+      seatEl = morningSeat({seat: seat_number, seatId: value.id});
+    } 
+    else if (isEvening) {
+      seatEl = eveningSeat({seat: seat_number, seatId: value.id});
+    }
+
+    // 💡 APPLY DISABLED STYLE
+    if (!isActive) {
+      seatEl.style.opacity = "0.15";
+      seatEl.style.pointerEvents = "none"; // disable click
+    }
+
+    grid.appendChild(seatEl);
+  });
+}
+
+
+// ---------           JQUERY      _------------------
+// ----------     Filter  ------------------------
+$(document).on('click', '.fb', function () {
+  const filter = $(this).data('filter');
+
+  // 👉 active button
+  $('.fb').removeClass('on');
+  $(this).addClass('on');
+
+  // 👉 call filter
+  renderFilteredSeats(filter);
+});
+
+
+// -----------     onclick on seats     ---------------
+$('#seat-grid').on('click', '.seat', function () {
+
+  const seatId = $(this).data('id');
+
+  const seat = seatMap[seatId]; // or find()
+
+  if (!seat) return;
+
+  selectSeat(seat, this);
+
+});
+
+// assign seat model handle by j query
+$(document).on('submit', '#assign-form', function (e) {
+    handleAssign(e);
+});

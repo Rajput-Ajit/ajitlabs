@@ -6,6 +6,7 @@
 <title>ReadSpace – Seat Manager</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <style>
   *{box-sizing:border-box}
   body{font-family:'DM Sans',sans-serif;background:#0e0e22;color:#e2e8f0;margin:0}
@@ -21,9 +22,9 @@
   .nl.on{background:linear-gradient(135deg,#c9a84c,#e8b84b);color:#12122a;font-weight:700}
   .topbar{background:#12122a;border-bottom:1px solid rgba(201,168,76,0.1);position:sticky;top:0;z-index:40}
   /* Seat sizes – responsive */
-  .seat{border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;transition:all 0.18s;border:2px solid transparent;position:relative;user-select:none;flex-shrink:0;font-size:10px;width:36px;height:36px}
-  @media(min-width:640px){.seat{width:42px;height:42px;font-size:11px}}
-  @media(min-width:1024px){.seat{width:46px;height:46px;font-size:12px}}
+  .seat{border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;transition:all 0.18s;border:2px solid transparent;position:relative;user-select:none;flex-shrink:0;font-size:10px;width:50px;height:50px}
+  @media(min-width:640px){.seat{width:48px;height:48px;font-size:11px}}
+  @media(min-width:1024px){.seat{width:50px;height:50px;font-size:12px}}
   .seat:hover{transform:scale(1.12);z-index:10}
   .seat.empty{background:#1e3a5f;border-color:#2563eb;color:#60a5fa}
   .seat.occ{background:#450a0a;border-color:#ef4444;color:#fca5a5}
@@ -516,7 +517,7 @@ RHLoader.stop();
       <div class="display text-base sm:text-xl text-stone-100 font-bold">Seat Manager</div>
       <div class="text-xs text-stone-500 hidden sm:block">Visual seat assignment & management</div>
     </div>
-    <button onclick="openAssign(null)" class="text-xs px-3 sm:px-4 py-2 rounded-xl font-semibold text-stone-900 whitespace-nowrap" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">+ Assign</button>
+    <button onclick="openAssignModal();" class="text-xs px-3 sm:px-4 py-2 rounded-xl font-semibold text-stone-900 whitespace-nowrap" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">+ Assign</button>
   </header>
 
   <main class="flex-1 p-4 sm:p-6 space-y-4">
@@ -526,24 +527,15 @@ RHLoader.stop();
       <div class="flex items-center gap-3 min-w-max">
         <div class="flex items-center gap-2">
           <span class="text-xs text-stone-500 uppercase tracking-wider">Hall:</span>
-          <select id="hallSel" class="text-sm px-3 py-2 rounded-lg" onchange="renderGrid()">
-            <option value="A">Hall A</option><option value="B">Hall B</option><option value="C">Hall C</option>
+          <select id="hallSel" class="text-sm px-3 py-2 rounded-lg">
           </select>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-stone-500 uppercase tracking-wider">Shift:</span>
-          <select id="shiftSel" class="text-sm px-3 py-2 rounded-lg" onchange="renderGrid()">
-            <option value="all">All Shifts</option>
-            <option value="morning">Morning (6AM–12PM)</option>
-            <option value="evening">Evening (2PM–10PM)</option>
-            <option value="fullday">Full Day</option>
-          </select>
-        </div>
+        
         <div class="flex gap-1.5 ml-2">
-          <button class="fb on" onclick="setF('all',this)">All</button>
-          <button class="fb" onclick="setF('empty',this)">Empty</button>
-          <button class="fb" onclick="setF('occ',this)">Occupied</button>
-          <button class="fb" onclick="setF('half',this)">Half-day</button>
+          <button class="fb on" data-filter="all">All</button>
+          <button class="fb" data-filter="empty">Empty</button>
+          <button class="fb"  data-filter="occupied">Occupied</button>
+          <button class="fb" data-filter="half">Morning / Evening</button>
         </div>
       </div>
     </div>
@@ -552,7 +544,7 @@ RHLoader.stop();
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
 
       <!-- Seat Grid (full width on mobile, 2/3 on xl) -->
-      <div class="xl:col-span-2">
+      <div class="xl:col-span-3">
         <div class="card p-4 sm:p-5">
           <!-- Stats bar -->
           <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
@@ -572,89 +564,200 @@ RHLoader.stop();
           <div class="text-xs text-stone-600 text-center mb-2 tracking-wider">— ENTRANCE —</div>
           <div id="seat-grid" class="flex flex-wrap gap-1.5 justify-center"></div>
           <div class="text-xs text-stone-600 text-center mt-2 tracking-wider">— BACK WALL —</div>
-
-          <!-- selected strip -->
-          <div id="sel-strip" class="hidden mt-4 p-3 rounded-xl flex items-center justify-between gap-3 flex-wrap" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3)">
-            <div class="flex items-center gap-3 min-w-0">
-              <span class="text-2xl">🪑</span>
-              <div class="min-w-0">
-                <div class="text-sm font-semibold text-amber-300 truncate" id="ss-name">—</div>
-                <div class="text-xs text-stone-400" id="ss-info">—</div>
-              </div>
-            </div>
-            <button onclick="openAssign(window._selectedSeat)" class="text-sm px-4 py-2 rounded-xl font-semibold text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Book →</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Side panels -->
-      <div class="space-y-4">
-        <!-- Detail panel -->
-        <div class="card p-4" id="detail-panel">
-          <div class="text-sm font-semibold text-stone-300 mb-3">Seat Detail</div>
-          <div id="detail-body" class="text-center py-5 text-stone-600">
-            <div class="text-4xl mb-2">🪑</div>
-            <p class="text-sm">Tap any seat</p>
-          </div>
-        </div>
-        <!-- Search -->
-        <div class="card p-4">
-          <div class="text-sm font-semibold text-stone-300 mb-3">Find Student</div>
-          <input type="text" placeholder="Name or seat…" class="w-full px-3 py-2.5 text-sm mb-2" oninput="doSearch(this.value)">
-          <div id="search-res" class="space-y-1 max-h-40 overflow-y-auto"></div>
-        </div>
-        <!-- Bulk -->
-        <div class="card p-4">
-          <div class="text-sm font-semibold text-stone-300 mb-3">Bulk Actions</div>
-          <div class="space-y-2">
-            <button class="w-full text-sm py-2.5 rounded-xl text-stone-400 hover:text-amber-400 text-left px-3" style="background:rgba(255,255,255,0.04)">📋 Export seat list</button>
-            <button class="w-full text-sm py-2.5 rounded-xl text-stone-400 hover:text-amber-400 text-left px-3" style="background:rgba(255,255,255,0.04)">🔄 Send renewals</button>
-            <button class="w-full text-sm py-2.5 rounded-xl text-red-400 hover:text-red-300 text-left px-3" style="background:rgba(239,68,68,0.06)">⚠ Release expired</button>
-          </div>
         </div>
       </div>
     </div>
   </main>
 </div>
 
-<!-- Assign Modal -->
-<div id="assign-modal" class="modal-bg hidden">
-  <div class="modal-card">
-    <!-- drag indicator on mobile -->
-    <div class="w-10 h-1 bg-stone-600 rounded-full mx-auto mb-4 sm:hidden"></div>
-    <button onclick="closeModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-stone-400 hover:text-stone-200 rounded-lg hover:bg-white/10 text-xl">✕</button>
-    <h3 class="display text-xl text-stone-100 font-bold mb-1" id="m-title">Assign Seat</h3>
-    <p class="text-xs text-stone-500 mb-5" id="m-sub">Fill in student details</p>
-    <div class="space-y-3">
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Seat No.</label><input id="inp-seat" type="text" placeholder="A-12" class="w-full px-3 py-2.5 text-sm"></div>
-        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Hall</label>
-          <select class="w-full px-3 py-2.5 text-sm"><option>Hall A</option><option>Hall B</option><option>Hall C</option></select>
-        </div>
-      </div>
-      <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Student Name</label><input type="text" placeholder="Full name" class="w-full px-3 py-2.5 text-sm"></div>
-      <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Phone</label><input type="tel" placeholder="+91 98765 43210" class="w-full px-3 py-2.5 text-sm"></div>
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Shift</label>
-          <select class="w-full px-3 py-2.5 text-sm"><option>Morning</option><option>Evening</option><option>Full Day</option><option>Half Day</option></select>
-        </div>
-        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Duration</label>
-          <select class="w-full px-3 py-2.5 text-sm"><option>1 Month</option><option>3 Months</option><option>6 Months</option><option>1 Year</option></select>
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Start Date</label><input type="date" class="w-full px-3 py-2.5 text-sm"></div>
-        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Monthly Fee</label><input type="number" placeholder="₹1500" class="w-full px-3 py-2.5 text-sm"></div>
-      </div>
-      <div class="flex gap-3 pt-1">
-        <button onclick="closeModal()" class="flex-1 py-3 rounded-xl text-sm text-stone-400" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">Cancel</button>
-        <button onclick="doAssign()" class="flex-1 py-3 rounded-xl text-sm font-semibold text-stone-900" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Assign ✓</button>
-      </div>
+<!-- Onclick Student Data To Show -->
+<div id="seat-modal" class="fixed inset-0 hidden items-center justify-center bg-black/70 backdrop-blur-sm z-50">
+
+  <!-- Modal Box -->
+  <div id="seat-modal-box"
+    class="w-[95%] max-w-md bg-[#1a1a35] border border-amber-400/20 rounded-2xl p-5
+           scale-95 opacity-0 transition-all duration-300">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-bold text-amber-300" id="modal-seat-title">Seat S-4</h2>
+      <button onclick="closeSeatModal()" class="text-stone-400 hover:text-red-400 text-xl">✕</button>
     </div>
+
+    <!-- Student Section -->
+    <div class="space-y-3" id="modal-seat-body">
+
+      <!-- Student Card (Evening) -->
+      <div class="bg-gradient-to-r from-gray-900 to-gray-800 border border-gray-700 rounded-xl p-3">
+
+        <div class="flex justify-between items-center mb-2">
+          <div class="font-semibold text-white">
+            Ajit Rajput
+          </div>
+
+          <span class="text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400">
+            Evening
+          </span>
+        </div>
+
+        <div class="text-xs text-stone-400 mb-1">
+          📞 8317217487
+        </div>
+
+        <div class="text-xs text-stone-500 mb-2">
+          Valid till: 2026-05-12
+        </div>
+
+        <button class="w-full py-1.5 text-xs rounded bg-red-500/10 border border-red-400/30 text-red-400 hover:bg-red-500/20">
+          Release Seat
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- Footer (since only evening → morning empty) -->
+    <div class="mt-4" id="modal-footer">
+      <button class="w-full py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-semibold">
+        Assign Remaining Seat
+      </button>
+    </div>
+
   </div>
 </div>
 
+
+<!--    ASSIGN SEAT MODEL  -->
+<div id="assign-seat-modal" class="fixed inset-0 hidden items-center justify-center bg-black/70 backdrop-blur-sm z-50">
+  <!-- Modal Box -->
+  <form id="assign-form" method="POST">
+  <div id="assign-seat-box"
+    class="w-[95%] max-w-lg bg-[#1a1a35] border border-amber-400/20 rounded-2xl p-5
+           scale-95 opacity-0 transition-all duration-300">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h2 class="text-lg font-bold text-amber-300">Edit / Assign Seat</h2>
+        <p class="text-xs text-stone-500">Fill in student details</p>
+      </div>
+      <button type="button" onclick="closeAssignModal()" class="text-stone-400 hover:text-red-400 text-xl">✕</button>
+    </div>
+
+    <!-- Form -->
+    <div class="space-y-3">
+
+      <!-- Seat + Hall -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-stone-400">Seat No.</label>
+          <input type="text" value="8-423" name="seat_number" disabled
+            class="w-full px-3 py-2 rounded-lg text-sm bg-white/5 border border-white/10">
+        </div>
+
+        <div>
+          <label class="text-xs text-stone-400">Hall</label>
+          <input type="text" value="" name="hall" disabled
+            class="w-full px-3 py-2 rounded-lg text-sm bg-white/5 border border-white/10">
+        </div>
+      </div>
+
+      <!-- Name -->
+      <div>
+        <label class="text-xs text-stone-400">Student Name</label>
+        <input type="text" placeholder="Full name" name="student_name" required 
+          class="w-full px-3 py-2 rounded-lg text-sm bg-white/5 border border-white/10">
+      </div>
+
+      <!-- Phone -->
+      <div>
+        <label class="text-xs text-stone-400">Phone</label>
+        <input type="text" placeholder="+91 98765 43210" name="mobile" required
+          class="w-full px-3 py-2 rounded-lg text-sm bg-white/5 border border-white/10">
+      </div>
+
+      <!-- Shift + Duration -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-stone-400">Shift</label>
+          <select class="w-full px-3 py-2 rounded-lg text-sm bg-white/5 border border-white/10" name="shift" required>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-xs text-stone-400">Duration</label>
+          <select class="w-full px-3 py-2 rounded-lg text-sm bg-white/5 border border-white/10" name="duration" required>
+            <option>1 Month</option>
+            <option>3 Months</option>
+            <option>6 Months</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Start Date + Fee -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-stone-400">Start Date</label>
+          <input type="date" name="start_date" required
+            class="w-full px-3 py-2 rounded-lg text-sm bg-white/5 border border-white/10">
+        </div>
+
+        <div class="hidden">
+          <label class="text-xs text-stone-400">Monthly Fee</label>
+          <input type="number" placeholder="₹1500" name="fees" disabled
+            class="w-full px-3 py-2 rounded-lg text-sm bg-white/5 border border-white/10">
+        </div>
+      </div>
+
+      <!-- Payment -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-stone-400">Collected Fees</label>
+          <input type="number" placeholder="₹1500" name="collected_fees" required
+            class="w-full px-3 py-2 rounded-lg text-sm bg-white/5 border border-white/10">
+        </div>
+
+        <div>
+          <label class="text-xs text-stone-400">Payment Method</label>
+          <select class="w-full px-3 py-2 rounded-lg text-sm bg-white/5 border border-white/10" name="payment_method" required>
+            <option value="cash">Cash</option>
+            <option value="upi">UPI</option>
+            <option value="card">Card</option>
+          </select>
+        </div>
+      </div>
+      <!--   INPUT Hidden   -->
+      <input type="hidden" name="seat_id">
+      <input type="hidden" name="hall_id">
+    </div>
+
+    <!-- Footer -->
+    <div class="flex gap-3 mt-5">
+      <button type="button" onclick="closeAssignModal()"
+        class="flex-1 py-2 rounded-xl text-sm text-stone-400 border border-white/10">
+        Cancel
+      </button>
+
+      <button type="submit" id="assign-btn"
+        class="flex-1 py-2 rounded-xl text-sm font-semibold text-black
+               bg-gradient-to-r from-amber-400 to-yellow-500">
+        Save Seat
+      </button>
+    </div>
+  </div>
+  </form>
+</div>
+
 <script>
+  /*
+  GLOBAL USE EVERYWHERE IN PAGE *SEATS
+  */
+  const grid = document.getElementById('seat-grid');
+  let seatsData = [];
+  let seatMap = {};
+/* --------------------------------------------*/
+
+
 function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
 function checkBtn(){document.getElementById('menu-btn').style.display=window.innerWidth>=1024?'none':'flex'}
@@ -668,95 +771,224 @@ const DOTS={morning:'bg-indigo-400',evening:'bg-orange-400',fullday:'bg-green-40
 let seats=[], curFilter='all', selectedEl=null;
 window._selectedSeat=null;
 
-function genSeats(count=60){
-  const hall=document.getElementById('hallSel').value;
-  return Array.from({length:count},(_,i)=>{
-    const r=Math.random(), isEmpty=r<0.25;
-    const sh=SHIFTS[Math.floor(Math.random()*SHIFTS.length)];
-    return{id:i+1,label:`${hall}-${i+1}`,status:isEmpty?'empty':sh,student:isEmpty?null:NAMES[Math.floor(Math.random()*NAMES.length)],phone:isEmpty?null:`+91 9${Math.floor(Math.random()*9e8+1e8)}`,fee:[1200,1500,1800,2000][Math.floor(Math.random()*4)],paid:Math.random()>0.15,validTill:'31 Mar 2026'};
-  });
+
+function selectSeat(s, el) {
+  console.log(s);
+
+  handleSeatSelection(el, s);
+}
+// helper
+function handleSeatSelection(el, s) {
+  if (selectedEl) selectedEl.classList.remove('selected');
+
+  el.classList.add('selected');
+  selectedEl = el;
+  window._selectedSeat = s;
+  openSeatModal(s) ;
 }
 
-function renderGrid(){
-  seats=genSeats(60);
-  const g=document.getElementById('seat-grid');
-  g.innerHTML='';
-  let e=0,o=0,h=0;
-  seats.forEach(s=>{
-    const isEmpty=s.status==='empty';
-    if(isEmpty)e++;else if(s.status==='half')h++;else o++;
-    const cls=isEmpty?'empty':(SCLS[s.status]||'occ');
-    const show=curFilter==='all'||(curFilter==='empty'&&isEmpty)||(curFilter==='occ'&&!isEmpty&&s.status!=='half')||(curFilter==='half'&&s.status==='half');
-    const el=document.createElement('div');
-    el.className=`seat ${cls}`;
-    el.style.opacity=show?'1':'0.15';
-    el.innerHTML=`${s.id}${!isEmpty?`<span class="seatdot ${DOTS[s.status]}"></span>`:''}`;
-    el.onclick=()=>selectSeat(s,el);
-    g.appendChild(el);
-  });
-  document.getElementById('s-empty').textContent=e;
-  document.getElementById('s-occ').textContent=o;
-  document.getElementById('s-half').textContent=h;
-  document.getElementById('s-tot').textContent=seats.length;
-  selectedEl=null;window._selectedSeat=null;
-  document.getElementById('sel-strip').classList.add('hidden');
-  document.getElementById('detail-body').innerHTML='<div class="text-center py-5 text-stone-600"><div class="text-4xl mb-2">🪑</div><p class="text-sm">Tap any seat</p></div>';
+// open model
+function openSeatModal(seat) {
+  const modal = document.getElementById('seat-modal');
+  const box = document.getElementById('seat-modal-box');
+
+  // title
+  document.getElementById('modal-seat-title').textContent = `Seat ${seat.label}`;
+
+  // render data
+  renderSeatModal(seat);
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+
+  setTimeout(() => {
+    box.classList.remove('scale-95', 'opacity-0');
+    box.classList.add('scale-100', 'opacity-100');
+  }, 10);
+
+  document.body.style.overflow = 'hidden';
 }
 
-function selectSeat(s,el){
-  if(selectedEl)selectedEl.classList.remove('selected');
-  el.classList.add('selected');selectedEl=el;window._selectedSeat=s;
-  document.getElementById('sel-strip').classList.remove('hidden');
-  document.getElementById('ss-name').textContent=`Seat ${s.label}`;
-  document.getElementById('ss-info').textContent=s.student||'Empty – click Book to assign';
-  // Detail panel
-  const c={empty:'#3b82f6',morning:'#818cf8',evening:'#f97316',fullday:'#22c55e',half:'#f59e0b'}[s.status]||'#94a3b8';
-  const lbl=({empty:'Empty',morning:'Morning',evening:'Evening',fullday:'Full Day',half:'Half Day'})[s.status];
-  document.getElementById('detail-body').innerHTML=`
-    <div class="text-center mb-3">
-      <div class="w-12 h-12 rounded-xl mx-auto mb-2 flex items-center justify-center text-xl" style="background:${c}22;border:2px solid ${c}">🪑</div>
-      <div class="font-bold text-stone-100 text-sm">${s.label}</div>
-      <span class="text-xs px-2 py-0.5 rounded-full font-semibold" style="background:${c}22;color:${c}">${lbl}</span>
+// render seat model
+function renderSeatModal(seat) {
+  const body = document.getElementById('modal-seat-body');
+  const footer = document.getElementById('modal-footer');
+
+  const occupants = seat.occupants || [];
+
+  // 🔵 EMPTY SEAT
+  if (occupants.length === 0) {
+    body.innerHTML = `
+      <div class="text-center text-stone-400 text-sm">
+        This seat is empty
+      </div>
+    `;
+
+    footer.innerHTML = `
+      <button onclick="handleAssignClick()"
+        class="w-full py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-semibold">
+        Assign Seat
+      </button>
+    `;
+    return;
+  }
+
+  // 🟢 OCCUPIED (1 or 2 students)
+  body.innerHTML = occupants.map((o, index) => `
+    <div class="bg-gradient-to-r from-gray-900 to-gray-800 border border-gray-700 rounded-xl p-3">
+
+      <div class="flex justify-between items-center mb-2">
+        <div class="font-semibold text-white">
+          ${o.first_name} ${o.last_name}
+        </div>
+
+        <span class="text-xs px-2 py-0.5 rounded-full
+          ${o.shift_code === 'morning' ? 'bg-indigo-500/20 text-indigo-400' : ''}
+          ${o.shift_code === 'evening' ? 'bg-orange-500/20 text-orange-400' : ''}
+          ${o.shift_code === 'fullday' ? 'bg-green-500/20 text-green-400' : ''}
+        ">
+          ${o.shift_name}
+        </span>
+      </div>
+
+      <div class="text-xs text-stone-400 mb-1">
+        📞 ${o.contact}
+      </div>
+
+      <div class="text-xs text-stone-500 mb-2">
+        Valid till: ${o.end_date}
+      </div>
+
+      <button onclick="releaseSeatStudent(${seat.id}, ${index})"
+        class="w-full py-1.5 text-xs rounded bg-red-500/10 border border-red-400/30 text-red-400 hover:bg-red-500/20">
+        Release Seat
+      </button>
+
     </div>
-    ${s.student?`<div class="space-y-1.5 text-xs text-left">
-      ${[['Student',s.student],['Phone',s.phone],['Shift',lbl],['Fee','₹'+s.fee+'/mo'],['Status',s.paid?'✓ Paid':'⚠ Due'],['Valid Till',s.validTill]].map(([k,v])=>`
-      <div class="flex justify-between py-1.5" style="border-bottom:1px solid rgba(255,255,255,0.06)"><span class="text-stone-500">${k}</span><span class="text-stone-200 font-medium">${v}</span></div>`).join('')}
-    </div>
-    <div class="flex gap-2 mt-3">
-      <button onclick="openAssign(window._selectedSeat)" class="flex-1 py-2 rounded-xl text-xs font-semibold text-stone-900" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Edit</button>
-      <button onclick="releaseSeat(${s.id})" class="flex-1 py-2 rounded-xl text-xs font-semibold text-red-400" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2)">Release</button>
-    </div>`:`
-    <p class="text-stone-500 text-xs text-center mb-3">This seat is empty</p>
-    <button onclick="openAssign(${s.id})" class="w-full py-2 rounded-xl text-xs font-semibold text-stone-900" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Assign Student</button>`}`;
+  `).join('');
+
+  // 🟡 PARTIAL SEAT → show assign
+  if (occupants.length === 1 && seat.status !== 'fullday') {
+    footer.innerHTML = `
+      <button onclick="handleAssignClick()"
+        class="w-full py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-semibold">
+        Assign Remaining Seat
+      </button>
+    `;
+  } else {
+    footer.innerHTML = '';
+  }
 }
 
-function setF(f,btn){
-  curFilter=f;
-  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  renderGrid();
+function closeSeatModal() {
+  const modal = document.getElementById('seat-modal');
+  const box = document.getElementById('seat-modal-box');
+
+  box.classList.add('scale-95', 'opacity-0');
+  box.classList.remove('scale-100', 'opacity-100');
+
+  setTimeout(() => {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }, 200);
+
+  // 🔓 unlock scroll
+  document.body.style.overflow = '';
 }
 
-function openAssign(s){
-  document.getElementById('inp-seat').value=s&&s.label?s.label:(s&&typeof s==='number'?`${document.getElementById('hallSel').value}-${s}`:'');
-  document.getElementById('m-title').textContent=s?'Edit / Assign Seat':'Assign New Seat';
-  document.getElementById('assign-modal').classList.remove('hidden');
-  document.body.style.overflow='hidden';
+function openAssignModal() {
+  const form   = Dom.el('#assign-form');
+  // form seat number annd hall name
+  const seatNumberInput = form.querySelector('[name="seat_number"]');
+  const seat_number = window._selectedSeat.seat_number;
+  if(seatNumberInput) seatNumberInput.value = seat_number;
+  
+  // hall name
+  const hallName = window._selectedHallName;
+  const hallNameInput = form.querySelector('[name="hall"]');
+  if(hallNameInput)  hallNameInput.value = hallName;
+
+  // Pre-fill hidden fields
+  const seatId = window._selectedSeat.id;
+  const hallId = window._selected_hall_id;
+  const seatInput = form.querySelector('[name="seat_id"]');
+  const hallInput = form.querySelector('[name="hall_id"]');
+  if (seatInput) seatInput.value = seatId;
+  if (hallInput) hallInput.value = hallId;
+
+  // Set today as default start_date
+  const dateInput = form.querySelector('[name="start_date"]');
+  if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+
+  // shifts 
+  _populateShiftDropdown();
+
+  const modal = document.getElementById('assign-seat-modal');
+  const box = document.getElementById('assign-seat-box');
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+
+  setTimeout(() => {
+    box.classList.remove('scale-95', 'opacity-0');
+    box.classList.add('scale-100', 'opacity-100');
+  }, 10);
+
+  document.body.style.overflow = 'hidden';
 }
-function closeModal(){document.getElementById('assign-modal').classList.add('hidden');document.body.style.overflow=''}
-function doAssign(){closeModal();renderGrid();toast('Seat assigned successfully!')}
-function releaseSeat(id){const s=seats.find(x=>x.id===id);if(s){s.status='empty';s.student=null}renderGrid();toast('Seat released')}
 
-function doSearch(q){
-  const r=document.getElementById('search-res');
-  if(!q){r.innerHTML='';return}
-  const m=seats.filter(s=>s.student&&s.student.toLowerCase().includes(q.toLowerCase()));
-  r.innerHTML=m.slice(0,5).map(s=>`<div class="flex justify-between px-2 py-1.5 rounded-lg hover:bg-white/5 cursor-pointer text-xs" onclick="selectSeat(seats[${s.id-1}],document.querySelectorAll('.seat')[${s.id-1}])"><span class="text-stone-300 truncate">${s.student}</span><span class="text-stone-500 ml-2 flex-shrink-0">${s.label}</span></div>`).join('')||'<div class="text-xs text-stone-600 px-2">No results</div>';
+function closeAssignModal() {
+  const modal = document.getElementById('assign-seat-modal');
+  const box = document.getElementById('assign-seat-box');
+
+  box.classList.add('scale-95', 'opacity-0');
+  box.classList.remove('scale-100', 'opacity-100');
+
+  setTimeout(() => {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }, 200);
+
+  document.body.style.overflow = '';
 }
 
-function toast(msg){const t=document.createElement('div');t.className='fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-6 sm:translate-x-0 px-5 py-3 rounded-xl text-sm font-semibold text-stone-900 z-50 shadow-lg';t.style='background:linear-gradient(135deg,#c9a84c,#e8b84b)';t.textContent='✓ '+msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}
+function handleAssignClick() {
+  closeSeatModal();
 
-renderGrid();
+  // assing data in form
+
+  setTimeout(() => {
+    openAssignModal();
+  }, 200);
+}
+
+function _populateShiftDropdown() {
+  const shiftSelect = Dom.el('[name="shift"]');
+  
+  if (!shiftSelect) return;
+  
+  const shifts = window.global_hall_shifts || [];
+  const activeShifts = window._selectedSeat.active_shifts || [];
+
+  // Get assigned shift codes
+  const assignedCodes = activeShifts.map(a => a.shift_code);
+
+  // Filter out assigned shifts
+  const availableShifts = shifts.filter(s => !assignedCodes.includes(s.code));
+
+  // Render dropdown
+  shiftSelect.innerHTML = availableShifts.map(s => `
+    <option value="${s.code}">
+      ${Format.shiftLabel(s.code)} — ${Format.currency(s.monthly_fee)}/mo
+    </option>
+  `).join('');
+}
+
 </script>
+<script src="../assets/js/core/ui.js"></script>
+<script src="../assets/js/core/api.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/core/helpers.js"></script>
+<script src="../assets/js/admin/seats.js"></script>
 </body>
 </html>

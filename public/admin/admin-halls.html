@@ -708,41 +708,6 @@ function backToMainEdit() {
   </div>
 
 </div>
-<script>
-  /// ----------- DELETE HALL SCRIPT      -------------------
-let deleteHallId = null;
-
-// open modal
-function openDeleteModal(hallId) {
-  deleteHallId = hallId;
-  document.getElementById("deleteHallModal").classList.remove("hidden");
-}
-
-// close modal
-function closeDeleteModal() {
-  deleteHallId = null;
-  document.getElementById("deleteHallModal").classList.add("hidden");
-}
-
-// confirm delete
-function confirmDeleteHall() {
-
-  if (!deleteHallId) return;
-
-  console.log("Deleting Hall ID:", deleteHallId);
-
-  // 👉 API call here
-  /*
-  fetch(`/api/halls/${deleteHallId}`, {
-    method: "DELETE"
-  })
-  */
-
-  alert("Hall deleted successfully ❌");
-
-  closeDeleteModal();
-}
-</script>
 
 <!-- UNDER DEVELOPMENT -->
 <div id="underDevModal" class="modal-bg hidden">
@@ -828,7 +793,7 @@ function renderHalls(data){
       </div>
       <div class="flex gap-2">
         <button 
-          onclick="openDeleteModal(${h.id})" 
+          onclick="openDeleteModal(${h.id}, ${h.branch_id})" 
           class="flex-1 py-2 rounded-xl text-xs font-semibold text-white text-center"
           style="background:linear-gradient(135deg,#ef4444,#dc2626)">
           Delete Hall

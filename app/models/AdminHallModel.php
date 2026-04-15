@@ -418,5 +418,35 @@ class HallModel
 
         return $branches;
     }
+
+    // hall existance with user
+    public function checkHallExistance($hallId, $branchId){
+        $stmt = $this->conn->prepare("
+                SELECT id FROM halls 
+                WHERE id = ? AND branch_id = ? AND  deleted_at IS NULL
+                LIMIT 1
+            ");
+        $stmt->bind_param("ii", $hallId, $branchId);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
+    }
+
+    public function deleteHall($data){
+        $hallId = $data['hall_id'];
+        $branchId = $data['branch_id'];
+
+        $stmt = $this->conn->prepare("
+            UPDATE halls 
+            SET deleted_at = NOW() 
+            WHERE id = ? 
+            AND branch_id = ? 
+            AND deleted_at IS NULL
+        ");
+
+        $stmt->bind_param("ii", $hallId, $branchId);
+        $stmt->execute();
+
+        return $stmt->affected_rows > 0;
+    }
 }
 ?>

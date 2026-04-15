@@ -45,4 +45,12 @@ class AdminHallController
             $this->service->list($data, $user)
         );
     }
+
+    public function delete($data)
+    {
+        $user = $_REQUEST['user'];
+        Response::success(
+            $this->service->delete($data, $user)
+        );
+    }
 }

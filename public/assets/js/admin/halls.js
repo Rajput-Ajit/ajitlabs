@@ -10,6 +10,7 @@ function mapHallData(apiData){
 
     return {
       id: h.id,
+      branch_id : h.branch_id,
       name: h.name,
       branch: h.branch_name,
       seats: h.total_seat_count,
@@ -106,7 +107,29 @@ async function addHall(e) {
   }
 }
 
+// confirm delete
+async function confirmDeleteHall() {
+  try {
+    const body = {
+                  hall_id: deleteHallId,
+                  branch_id: deleteBranchId
+                };
+    console.log(body);
+    await Api.delete('/app/api/admin.hall.delete.php', body, {
+      toast:      true,
+      load : true,
+      successMsg: 'Hall Deleted successfully!',
+    });
+    
+    closeDeleteModal();
+    
+    // reload the hall
+    await initHall();
 
+  } catch (err) {
+    console.error(err);
+  }
+}
 
 
 
@@ -133,4 +156,23 @@ async function addHall(e) {
 
     select.appendChild(option);
   });
+}
+
+
+  /// ----------- DELETE HALL SCRIPT      -------------------
+let deleteHallId = null;
+let deleteBranchId = null;
+
+// open modal
+function openDeleteModal(hallId, branchId) {
+  deleteHallId =    hallId;
+  deleteBranchId =  branchId;
+  document.getElementById("deleteHallModal").classList.remove("hidden");
+}
+
+// close modal
+function closeDeleteModal() {
+  deleteHallId = null;
+  deleteBranchId = null;
+  document.getElementById("deleteHallModal").classList.add("hidden");
 }

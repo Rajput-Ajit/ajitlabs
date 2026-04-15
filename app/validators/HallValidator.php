@@ -104,4 +104,21 @@ class HallValidator
 
         return true;
     }
+
+    public static function validateDeleteHall($data){
+        $v = self::validator();
+
+        // --- Core hall fields (unchanged) ---
+        $v->required('Hall Id', $data['hall_id'] ?? null)
+          ->numeric('Hall Id', $data['hall_id'] ?? null)
+          ->greaterThan('Hall Id', $data['hall_id'] ?? null, 0)
+          
+          ->required('Branch ID', $data['branch_id'] ?? null)
+          ->numeric('Branch ID', $data['branch_id'] ?? null)
+          ->greaterThan('Branch ID', $data['branch_id'] ?? null, 0);
+
+        if ($v->hasErrors()) {
+            Response::error($v->firstError(), 422);
+        }
+    }
 }

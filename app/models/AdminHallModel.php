@@ -399,5 +399,24 @@ class HallModel
 
         return $stmt->get_result()->fetch_assoc();
     }
+
+    // GEt Branches
+    public function getBranches($adminId){
+        $stmt = $this->conn->prepare("SELECT id, name FROM branches WHERE admin_id = ? LIMIT ?");
+        $limit = 10;
+
+        $stmt->bind_param("ii", $adminId, $limit);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+
+        $branches = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $branches[] = $row;
+        }
+
+        return $branches;
+    }
 }
 ?>

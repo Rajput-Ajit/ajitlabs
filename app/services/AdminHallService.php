@@ -188,7 +188,11 @@ class AdminHallService
             unset($hall['shifts_raw']);
         }
 
+        // get branches
+        $branches = $this->hallModel->getBranches($adminId);
+
         return [
+            'branches' => $branches,
             'page'  => $page,
             'limit' => $limit,
             'data'  => $halls

@@ -32,26 +32,8 @@
   .modal-card{background:#1a1a35;border:1px solid rgba(201,168,76,0.3);border-radius:20px 20px 0 0;width:100%;max-width:540px;padding:20px;position:relative;max-height:92vh;overflow-y:auto}
   @media(min-width:640px){.modal-card{border-radius:20px;padding:24px}}
   ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:#0e0e22}::-webkit-scrollbar-thumb{background:#c9a84c44;border-radius:2px}
-</style>
-</head>
-<body>
-<!-- 🎮 Neon Gate Loader — Modern, simple, professional -->
-<div id="gate-loader">
-  <div class="gate-overlay"></div>
 
-  <div class="gate-box">
-    <div class="gate-door">
-      <div class="door left"></div>
-      <div class="door right"></div>
-      <div class="gate-light"></div>
-    </div>
 
-    <h2 class="gate-title">ReadSpace</h2>
-    <p class="gate-text" id="gate-text">Opening your workspace...</p>
-  </div>
-</div>
-
-<style>
   #gate-loader{
     position:fixed;
     inset:0;
@@ -197,7 +179,41 @@
       font-size:24px;
     }
   }
+
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+
+    display: "";
+    align-items: center;   /* ✅ vertical center */
+    justify-content: center; /* ✅ horizontal center */
+
+    z-index: 999;
+  }
+
+  .modal-card {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
 </style>
+</head>
+<body>
+<!-- 🎮 Neon Gate Loader — Modern, simple, professional -->
+<div id="gate-loader">
+  <div class="gate-overlay"></div>
+
+  <div class="gate-box">
+    <div class="gate-door">
+      <div class="door left"></div>
+      <div class="door right"></div>
+      <div class="gate-light"></div>
+    </div>
+
+    <h2 class="gate-title">ReadSpace</h2>
+    <p class="gate-text" id="gate-text">Opening your workspace...</p>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -227,15 +243,16 @@
   window.Loader = {
     stop() {
       clearInterval(timer);
-
-      loader.classList.add('hide');
-
+      
       setTimeout(() => {
+        loader.classList.add('hide');
         loader.remove();
-      }, 700);
+      }, 1500);
     }
   };
 })();
+
+Loader.stop();
 </script>
 
   
@@ -291,7 +308,7 @@
   <main class="flex-1 p-4 sm:p-6">
     <!-- Branch tabs – horizontal scroll -->
     <div class="overflow-x-auto pb-2 mb-5">
-      <div class="flex gap-2 min-w-max">
+      <div class="flex gap-2 min-w-max" id="branchesList">
         <button class="branch-btn on" onclick="setBranch(0,this)">All Branches</button>
         <button class="branch-btn" onclick="setBranch(1,this)">Nagpur Main</button>
         <button class="branch-btn" onclick="setBranch(2,this)">Civil Lines</button>
@@ -306,71 +323,479 @@
 <!-- Add Hall Modal -->
 <div id="add-modal" class="modal-bg hidden">
   <div class="modal-card">
+    
     <div class="w-10 h-1 bg-stone-600 rounded-full mx-auto mb-4 sm:hidden"></div>
-    <button onclick="closeModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-stone-400 hover:text-stone-200 rounded-lg hover:bg-white/10 text-xl">✕</button>
+
+    <button onclick="closeModal()" type="button"
+      class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-stone-400 hover:text-stone-200 rounded-lg hover:bg-white/10 text-xl">✕</button>
+
     <h3 class="display text-xl text-stone-100 font-bold mb-5">Add New Hall</h3>
-    <div class="space-y-3">
+
+    <form class="space-y-3" id="addHallForm" method="POST">
+
+      <!-- Hall + Branch -->
       <div class="grid grid-cols-2 gap-3">
-        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Hall Name</label><input type="text" placeholder="Hall A" class="w-full px-3 py-2.5 text-sm"></div>
-        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Branch</label>
-          <select class="w-full px-3 py-2.5 text-sm"><option>Nagpur Main</option><option>Civil Lines</option><option>Sitabuldi</option></select>
+        <div>
+          <label class="text-xs text-stone-400 uppercase mb-1 block">Hall Name</label>
+          <input name="hall_name" id="hall_name" type="text" placeholder="AC Hall Floor 1" class="w-full px-3 py-2.5 text-sm" required>
+        </div>
+
+        <div>
+          <label class="text-xs text-stone-400 uppercase mb-1 block">Branch</label>
+          
+          <select name="branch_id" id="branch_id" class="w-full px-3 py-2.5 text-sm bg-transparent text-stone-200 border border-white/10 rounded-lg" required>
+            <option value="">Select Branch</option>
+          </select>
         </div>
       </div>
+
+      <!-- Seats + Prefix -->
       <div class="grid grid-cols-2 gap-3">
-        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Total Seats</label><input type="number" placeholder="60" class="w-full px-3 py-2.5 text-sm"></div>
-        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Floor</label><input type="text" placeholder="Ground Floor" class="w-full px-3 py-2.5 text-sm"></div>
+        <div>
+          <label class="text-xs text-stone-400 uppercase mb-1 block">Total Seats</label>
+          <input name="total_seats" id="total_seats" type="number" placeholder="60" class="w-full px-3 py-2.5 text-sm" required>
+        </div>
+
+        <div>
+          <label class="text-xs text-stone-400 uppercase mb-1 block">Prefix</label>
+          <input name="prefix" id="prefix"  type="text" placeholder="S" class="w-full px-3 py-2.5 text-sm">
+        </div>
       </div>
+
+      <!-- Count Start -->
       <div>
-        <label class="text-xs text-stone-400 uppercase tracking-wider mb-2 block">Shifts</label>
+        <label class="text-xs text-stone-400 uppercase mb-1 block">Seat Start Number</label>
+        <input name="count_start" "count_start" type="number" placeholder="Enter starting seat number (e.g. 1)" class="w-full px-3 py-2.5 text-sm">
+      </div>
+
+      <!-- Shifts -->
+            <!-- Shifts -->
+      <div>
+        <label class="text-xs text-stone-400 uppercase mb-2 block">Shifts</label>
         <div class="flex flex-wrap gap-3">
-          <label class="flex items-center gap-2 text-sm text-stone-300 cursor-pointer"><input type="checkbox" checked class="accent-amber-400 w-4 h-4"> Morning</label>
-          <label class="flex items-center gap-2 text-sm text-stone-300 cursor-pointer"><input type="checkbox" checked class="accent-amber-400 w-4 h-4"> Evening</label>
-          <label class="flex items-center gap-2 text-sm text-stone-300 cursor-pointer"><input type="checkbox" class="accent-amber-400 w-4 h-4"> Full Day</label>
-          <label class="flex items-center gap-2 text-sm text-stone-300 cursor-pointer"><input type="checkbox" class="accent-amber-400 w-4 h-4"> Half Day</label>
+
+          <label class="flex items-center gap-2 text-sm text-stone-300">
+            <input type="checkbox" value="morning" data-group="morning" class="shift accent-amber-400 w-4 h-4" checked> Morning
+          </label>
+
+          <label class="flex items-center gap-2 text-sm text-stone-300">
+            <input type="checkbox" value="evening" data-group="evening" class="shift accent-amber-400 w-4 h-4" checked> Evening
+          </label>
+
+          <label class="flex items-center gap-2 text-sm text-stone-300">
+            <input type="checkbox" value="full_day" data-group="full_day" class="shift accent-amber-400 w-4 h-4" checked> Full Day
+          </label>
+
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Morning Start</label><input type="time" value="06:00" class="w-full px-3 py-2.5 text-sm"></div>
-        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Morning End</label><input type="time" value="12:00" class="w-full px-3 py-2.5 text-sm"></div>
-        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Evening Start</label><input type="time" value="14:00" class="w-full px-3 py-2.5 text-sm"></div>
-        <div><label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Evening End</label><input type="time" value="22:00" class="w-full px-3 py-2.5 text-sm"></div>
+
+      <!-- Timing -->
+      <div class="space-y-4">
+
+        <!-- Morning -->
+        <div data-group="morning" class="shift-block">
+          <label class="text-xs text-stone-400 uppercase mb-1 block">Morning Time</label>
+          <div class="grid grid-cols-2 gap-3">
+            <input name="morning_start" data-group="morning" id="morning_start" type="time" value="07:00" class="w-full px-3 py-2.5 text-sm">
+            <input name="morning_end" data-group="morning" id="morning_end" type="time" value="15:00" class="w-full px-3 py-2.5 text-sm">
+          </div>
+          <div class="flex justify-between text-xs text-stone-500 mt-1">
+            <span>From</span>
+            <span>To</span>
+          </div>
+        </div>
+
+        <!-- Evening -->
+        <div data-group="evening" class="shift-block">
+          <label class="text-xs text-stone-400 uppercase mb-1 block">Evening Time</label>
+          <div class="grid grid-cols-2 gap-3">
+            <input name="evening_start" data-group="evening" id="evening_start" type="time" value="15:00" class="w-full px-3 py-2.5 text-sm">
+            <input name="evening_end" data-group="evening" id="evening_end" type="time" value="22:00" class="w-full px-3 py-2.5 text-sm">
+          </div>
+          <div class="flex justify-between text-xs text-stone-500 mt-1">
+            <span>From</span>
+            <span>To</span>
+          </div>
+        </div>
+
+        <!-- Full Day -->
+        <div data-group="full_day" class="shift-block">
+          <label class="text-xs text-stone-400 uppercase mb-1 block">Full Day Time</label>
+          <div class="grid grid-cols-2 gap-3">
+            <input name="full_day_start" data-group="full_day" id="full_day_start" type="time" value="07:00" class="w-full px-3 py-2.5 text-sm">
+            <input name="full_day_end" data-group="full_day" id="full_day_end" type="time" value="22:00" class="w-full px-3 py-2.5 text-sm">
+          </div>
+          <div class="flex justify-between text-xs text-stone-500 mt-1">
+            <span>From</span>
+            <span>To</span>
+          </div>
+        </div>
+
       </div>
+
+      <!-- Fees -->
       <div>
-        <label class="text-xs text-stone-400 uppercase tracking-wider mb-2 block">Monthly Fees (₹)</label>
+        <label class="text-xs text-stone-400 uppercase mb-2 block">Monthly Fees (₹)</label>
         <div class="grid grid-cols-3 gap-2">
-          <input type="number" placeholder="Morning" class="w-full px-3 py-2.5 text-sm text-center">
-          <input type="number" placeholder="Evening" class="w-full px-3 py-2.5 text-sm text-center">
-          <input type="number" placeholder="Full Day" class="w-full px-3 py-2.5 text-sm text-center">
+          <input name="morning_fees" data-group="morning" id="morning_fees" type="number" placeholder="Morning" class="w-full px-3 py-2.5 text-sm text-center">
+          <input name="evening_fees" data-group="evening" id="evening_fees" type="number" placeholder="Evening" class="w-full px-3 py-2.5 text-sm text-center">
+          <input name="full_day_fees" data-group="full_day" id="full_day_fees" type="number" placeholder="Full Day" class="w-full px-3 py-2.5 text-sm text-center">
         </div>
       </div>
-      <div>
-        <label class="text-xs text-stone-400 uppercase tracking-wider mb-2 block">Facilities</label>
-        <div class="flex flex-wrap gap-2">
-          ${['AC','WiFi','CCTV','Locker','Water','Printing'].map(f=>`<label class="flex items-center gap-1.5 text-xs text-stone-400 cursor-pointer bg-white/5 px-2.5 py-1.5 rounded-lg"><input type="checkbox" checked class="accent-amber-400 w-3.5 h-3.5"> ${f}</label>`).join('')}
-        </div>
-      </div>
+
+      <!-- Buttons -->
       <div class="flex gap-3 pt-1">
-        <button onclick="closeModal()" class="flex-1 py-3 rounded-xl text-sm text-stone-400" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">Cancel</button>
-        <button onclick="addHall()" class="flex-1 py-3 rounded-xl text-sm font-semibold text-stone-900" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Create Hall</button>
+        <button onclick="closeModal()" type="button"
+          class="flex-1 py-3 rounded-xl text-sm text-stone-400"
+          style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">
+          Cancel
+        </button>
+
+        <button id="addHallFormBtn" type="submit"
+          class="flex-1 py-3 rounded-xl text-sm font-semibold text-stone-900"
+          style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">
+          Create Hall
+        </button>
       </div>
+    </form>
+  </div>
+</div>
+<script>
+ document.addEventListener("DOMContentLoaded", () => {
+
+  const shifts = document.querySelectorAll(".shift");
+
+  // attach event
+  shifts.forEach(shift => {
+    shift.addEventListener("change", handleShiftChange);
+  });
+
+  // run once on load
+  handleShiftChange();
+});
+
+function handleShiftChange(e) {
+  const shifts = document.querySelectorAll(".shift");
+  const checked = document.querySelectorAll(".shift:checked");
+
+  // ❌ prevent unchecking all
+  if (checked.length === 0) {
+    if (e) e.target.checked = true;
+    alert("At least one shift must be selected");
+    return;
+  }
+
+  shifts.forEach(shift => {
+    const group = shift.dataset.group;
+
+    // get full block (Morning / Evening / Full Day)
+    const block = document.querySelector(`.shift-block[data-group="${group}"]`);
+
+    // get all inputs of that group
+    const inputs = document.querySelectorAll(`input[data-group="${group}"]`);
+
+    if (shift.checked) {
+      // ✅ show block
+      if (block) block.classList.remove("hidden");
+
+      // ✅ make required
+      inputs.forEach(input => {
+        input.required = true;
+      });
+
+    } else {
+      // ❌ hide block
+      if (block) block.classList.add("hidden");
+
+      // ❌ remove required + clear values
+      inputs.forEach(input => {
+        input.required = false;
+        input.value = "";
+      });
+    }
+  });
+}
+</script>
+
+<!--    EDITING     -->
+<div id="editHallModal" class="modal-bg hidden">
+  <div class="modal-card max-w-lg">
+
+    <h3 class="display text-xl text-stone-100 font-bold mb-5">Edit Hall</h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+      <!-- Basic Details -->
+      <div onclick="openEditSection('basic')" 
+        class="cursor-pointer p-5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition">
+
+        <div class="text-lg font-semibold text-stone-100 mb-1">Basic Details</div>
+        <p class="text-xs text-stone-400">Edit hall info, shifts, timing & fees</p>
+
+      </div>
+
+      <!-- Seat Management -->
+      <div onclick="openEditSection('seats')" 
+        class="cursor-pointer p-5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition">
+
+        <div class="text-lg font-semibold text-stone-100 mb-1">Seat Management</div>
+        <p class="text-xs text-stone-400">Manage seats, numbering & layout</p>
+
+      </div>
+
+    </div>
+
+    <!-- Close -->
+    <button onclick="closeEditHall()" 
+      class="mt-6 w-full py-3 rounded-xl text-sm text-stone-400"
+      style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">
+      Close
+    </button>
+
+  </div>
+</div>
+
+
+
+<div id="editBasicSection" class="modal-bg hidden">
+  <div class="modal-card">
+
+    <h3 class="text-xl text-white font-bold mb-5">Edit Basic Details</h3>
+
+    <div class="space-y-3">
+
+      <input id="edit_hall_name" type="text" placeholder="Hall Name" class="w-full px-3 py-2.5 text-sm">
+
+      <select id="edit_branch_id" class="w-full px-3 py-2.5 text-sm bg-transparent border border-white/10 rounded-lg">
+        <option value="">Select Branch</option>
+      </select>
+
+      <input id="edit_prefix" type="text" placeholder="Prefix (e.g. AC)" class="w-full px-3 py-2.5 text-sm">
+
+      <!-- Buttons -->
+      <div class="flex gap-3 pt-2">
+        <button onclick="backToMainEdit()" class="flex-1 py-3 text-sm text-stone-400 border border-white/10 rounded-xl">
+          Back
+        </button>
+
+        <button onclick="updateHallBasic()" class="flex-1 py-3 text-sm font-semibold text-black rounded-xl"
+          style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">
+          Save Changes
+        </button>
+      </div>
+
     </div>
   </div>
 </div>
 
+
+
+<div id="editSeatSection" class="modal-bg hidden">
+  <div class="modal-card max-w-2xl">
+
+    <h3 class="text-xl text-white font-bold mb-4">Seat Management</h3>
+
+    <!-- Top Actions -->
+    <div class="flex flex-wrap gap-2 mb-4">
+      <button class="px-3 py-2 text-xs bg-white/10 rounded-lg">+ Add Seat</button>
+      <button class="px-3 py-2 text-xs bg-white/10 rounded-lg">Bulk Generate</button>
+      <button class="px-3 py-2 text-xs bg-red-500/20 text-red-300 rounded-lg">Delete Selected</button>
+    </div>
+
+    <!-- Seat List -->
+    <div class="max-h-80 overflow-y-auto border border-white/10 rounded-lg">
+      <table class="w-full text-sm">
+        <thead class="bg-white/5 text-stone-400 text-xs">
+          <tr>
+            <th class="p-2">✔</th>
+            <th class="p-2">Seat No</th>
+            <th class="p-2">Status</th>
+          </tr>
+        </thead>
+
+        <tbody id="editSeatList">
+          <!-- dynamic rows -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Bottom -->
+    <div class="flex gap-3 mt-4">
+      <button onclick="backToMainEdit()" class="flex-1 py-3 text-sm text-stone-400 border border-white/10 rounded-xl">
+        Back
+      </button>
+
+      <button class="flex-1 py-3 text-sm font-semibold text-black rounded-xl"
+        style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">
+        Save Seats
+      </button>
+    </div>
+
+  </div>
+</div>
+
 <script>
+  function openEditHall() {
+  document.getElementById("editHallModal").classList.remove("hidden");
+}
+
+function closeEditHall() {
+  document.getElementById("editHallModal").classList.add("hidden");
+}
+
+function openEditSection(type) {
+  document.getElementById("editHallModal").classList.add("hidden");
+
+  if (type === "basic") {
+    document.getElementById("editBasicSection").classList.remove("hidden");
+  }
+
+  if (type === "seats") {
+    document.getElementById("editSeatSection").classList.remove("hidden");
+  }
+}
+
+function backToMainEdit() {
+  document.getElementById("editBasicSection").classList.add("hidden");
+  document.getElementById("editSeatSection").classList.add("hidden");
+  document.getElementById("editHallModal").classList.remove("hidden");
+}
+</script>
+
+
+
+<!--    DELETE HALL MODAL     -->
+<!--    DELETE HALL MODAL     -->
+<div id="deleteHallModal" class="modal-bg hidden">
+
+  <div class="modal-card max-w-md">
+
+    <!-- Icon -->
+    <div class="flex justify-center mb-4">
+      <div class="w-14 h-14 flex items-center justify-center rounded-full bg-red-500/20 text-red-400 text-2xl">
+        ⚠
+      </div>
+    </div>
+
+    <!-- Title -->
+    <h3 class="text-lg text-center text-white font-bold mb-2">
+      Delete Hall?
+    </h3>
+
+    <!-- Message -->
+    <p class="text-sm text-center text-stone-400 mb-5">
+      This will permanently delete the hall and all related data including seats, bookings, and records. This action cannot be undone.
+    </p>
+
+    <!-- Buttons -->
+    <div class="flex gap-3">
+
+      <!-- Cancel -->
+      <button onclick="closeDeleteModal()"
+        class="flex-1 py-3 rounded-xl text-sm text-stone-400 border border-white/10">
+        Cancel
+      </button>
+
+      <!-- Delete -->
+      <button onclick="confirmDeleteHall()"
+        class="flex-1 py-3 rounded-xl text-sm font-semibold text-white"
+        style="background:linear-gradient(135deg,#ef4444,#dc2626)">
+        Delete Permanently
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+<script>
+  /// ----------- DELETE HALL SCRIPT      -------------------
+let deleteHallId = null;
+
+// open modal
+function openDeleteModal(hallId) {
+  deleteHallId = hallId;
+  document.getElementById("deleteHallModal").classList.remove("hidden");
+}
+
+// close modal
+function closeDeleteModal() {
+  deleteHallId = null;
+  document.getElementById("deleteHallModal").classList.add("hidden");
+}
+
+// confirm delete
+function confirmDeleteHall() {
+
+  if (!deleteHallId) return;
+
+  console.log("Deleting Hall ID:", deleteHallId);
+
+  // 👉 API call here
+  /*
+  fetch(`/api/halls/${deleteHallId}`, {
+    method: "DELETE"
+  })
+  */
+
+  alert("Hall deleted successfully ❌");
+
+  closeDeleteModal();
+}
+</script>
+
+<!-- UNDER DEVELOPMENT -->
+<div id="underDevModal" class="modal-bg hidden">
+
+  <div class="modal-card max-w-md text-center">
+
+    <!-- Icon -->
+    <div class="flex justify-center mb-4">
+      <div class="w-14 h-14 flex items-center justify-center rounded-full bg-amber-400/20 text-amber-400 text-2xl">
+        🚧
+      </div>
+    </div>
+
+    <!-- Title -->
+    <h3 class="text-lg text-white font-bold mb-2">
+      Feature Under Development
+    </h3>
+
+    <!-- Message -->
+    <p class="text-sm text-stone-400 mb-5">
+      This feature is currently under development and will be available soon.  
+      Thank you for your patience 🙌
+    </p>
+
+    <!-- Button -->
+    <button onclick="closeUnderDevModal()"
+      class="w-full py-3 rounded-xl text-sm font-semibold text-stone-900"
+      style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">
+      OK, Got it
+    </button>
+
+  </div>
+
+</div>
+<script>
+// open modal
+function openUnderDevModal() {
+  document.getElementById("underDevModal").classList.remove("hidden");
+}
+
+// close modal
+function closeUnderDevModal() {
+  document.getElementById("underDevModal").classList.add("hidden");
+}
+</script>
+
+
+<script>
+var halls = [];
 function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show')}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
 function checkBtn(){document.getElementById('menu-btn').style.display=window.innerWidth>=1024?'none':'flex'}
 checkBtn();window.addEventListener('resize',checkBtn);
-
-const halls=[
-  {id:1,name:'Hall A',branch:'Nagpur Main',seats:60,occ:47,shifts:['Morning','Evening'],time:'6AM–10PM',morning:'₹1,200',evening:'₹1,000',fullday:'₹2,000',status:'open',fac:['AC','WiFi','CCTV'],floor:'Ground'},
-  {id:2,name:'Hall B',branch:'Nagpur Main',seats:60,occ:55,shifts:['Full Day'],time:'6AM–10PM',morning:'₹1,500',evening:'₹1,200',fullday:'₹2,500',status:'full',fac:['AC','WiFi','Locker'],floor:'1st'},
-  {id:3,name:'Hall C',branch:'Civil Lines',seats:40,occ:28,shifts:['Morning','Evening'],time:'6AM–10PM',morning:'₹1,000',evening:'₹900',fullday:'₹1,800',status:'open',fac:['WiFi','Water'],floor:'Ground'},
-  {id:4,name:'Hall D',branch:'Civil Lines',seats:80,occ:61,shifts:['Morning','Evening','Full Day'],time:'6AM–10PM',morning:'₹1,300',evening:'₹1,100',fullday:'₹2,200',status:'open',fac:['AC','WiFi','CCTV','Locker'],floor:'2nd'},
-  {id:5,name:'Hall E',branch:'Sitabuldi',seats:50,occ:50,shifts:['Morning','Evening'],time:'6AM–10PM',morning:'₹1,100',evening:'₹950',fullday:'₹1,900',status:'full',fac:['AC','WiFi'],floor:'Ground'},
-  {id:6,name:'Hall F',branch:'Sitabuldi',seats:30,occ:18,shifts:['Morning'],time:'6AM–12PM',morning:'₹800',evening:'—',fullday:'—',status:'open',fac:['WiFi','Water'],floor:'Ground'},
-];
 
 function renderHalls(data){
   const g=document.getElementById('halls-grid');
@@ -384,7 +809,7 @@ function renderHalls(data){
             <span class="text-xl">🏛</span>
             <div class="display text-base sm:text-lg font-bold text-stone-100">${h.name}</div>
           </div>
-          <div class="text-xs text-stone-500">${h.branch} · ${h.floor} Floor</div>
+          <div class="text-xs text-stone-500">${h.branch} · ${h.floor} </div>
         </div>
         <span class="${h.status==='full'?'bg-r':'bg-g'}">${h.status==='full'?'Full':'Open'}</span>
       </div>
@@ -394,7 +819,6 @@ function renderHalls(data){
       </div>
       <div class="flex flex-wrap gap-1 mb-3">
         ${h.shifts.map(s=>`<span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(201,168,76,0.1);color:#e8b84b;border:1px solid rgba(201,168,76,0.2)">${s}</span>`).join('')}
-        <span class="text-xs text-stone-600 self-center ml-1">⏰ ${h.time}</span>
       </div>
       <div class="grid grid-cols-3 gap-1.5 mb-3">
         ${[['Morning',h.morning],['Evening',h.evening],['Full Day',h.fullday]].map(([l,v])=>`<div class="text-center p-2 rounded-lg" style="background:rgba(255,255,255,0.04)"><div class="text-xs text-stone-500 mb-0.5">${l}</div><div class="text-xs font-bold text-stone-200">${v}</div></div>`).join('')}
@@ -403,8 +827,13 @@ function renderHalls(data){
         ${h.fac.map(f=>`<span class="text-xs px-2 py-0.5 rounded-full text-stone-500" style="background:rgba(255,255,255,0.04)">✓ ${f}</span>`).join('')}
       </div>
       <div class="flex gap-2">
-        <a href="admin-seats.html" class="flex-1 py-2 rounded-xl text-xs font-semibold text-stone-900 text-center" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">View Seats</a>
-        <button class="flex-1 py-2 rounded-xl text-xs font-semibold text-stone-300" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">Edit</button>
+        <button 
+          onclick="openDeleteModal(${h.id})" 
+          class="flex-1 py-2 rounded-xl text-xs font-semibold text-white text-center"
+          style="background:linear-gradient(135deg,#ef4444,#dc2626)">
+          Delete Hall
+        </button>
+        <button onclick="openUnderDevModal()" class="flex-1 py-2 rounded-xl text-xs font-semibold text-stone-300" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">Edit</button>
       </div>
     </div>`;
   }).join('');
@@ -413,15 +842,19 @@ function renderHalls(data){
 function setBranch(i,btn){
   document.querySelectorAll('.branch-btn').forEach(b=>{b.classList.remove('on')});
   btn.classList.add('on');
-  const brs=['','Nagpur Main','Civil Lines','Sitabuldi'];
-  renderHalls(i===0?halls:halls.filter(h=>h.branch===brs[i]));
+  const brs=  window._branches;
+  renderHalls(i===0?halls:halls.filter(h=>h.branch===brs[i]?.name));
 }
 
 function closeModal(){document.getElementById('add-modal').classList.add('hidden');document.body.style.overflow=''}
-function addHall(){closeModal();toast('Hall created successfully!')}
 function toast(msg){const t=document.createElement('div');t.className='fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-6 sm:translate-x-0 px-5 py-3 rounded-xl text-sm font-semibold text-stone-900 z-50 shadow-lg';t.style='background:linear-gradient(135deg,#c9a84c,#e8b84b)';t.textContent='✓ '+msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}
 
-renderHalls(halls);
+//renderHalls(halls);
 </script>
+<script src="../assets/js/core/ui.js"></script>
+<script src="../assets/js/core/api.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/core/helpers.js"></script>
+<script src="../assets/js/admin/halls.js"></script>
 </body>
 </html>

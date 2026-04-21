@@ -265,6 +265,33 @@
   };
 
 })();
+
+// added to stop animation
+window.stopLoaderSmoothly = function () {
+  const loader = document.getElementById('game-loader');
+  const msg = document.getElementById('loader-msg');
+
+  if (!loader) return;
+
+  // 1. fade text first
+  if (msg) {
+    msg.style.opacity = '0';
+  }
+
+  // 2. fade particles nicely
+  const particles = loader.querySelectorAll('.particles span');
+  particles.forEach(p => {
+    p.style.transition = 'opacity 0.5s ease';
+    p.style.opacity = '0';
+    p.style.animationPlayState = 'paused';
+  });
+
+  // 3. small delay → then call original stop
+  setTimeout(() => {
+    window.Loader.stop(); // 🔥 IMPORTANT (this clears interval)
+  }, 300);
+};
+stopLoaderSmoothly();
 </script>
 
 
@@ -491,6 +518,7 @@ const payData=Array.from({length:15},(_,i)=>({
   n:NAMES[i%NAMES.length],hall:HALLS[i%3],seat:`A-${i+1}`,amt:[1200,1500,1800,2000][i%4],
   method:METHODS[i%3],date:`${i+1} Mar 2026`,paid:Math.random()>0.15
 }));
+
 
 // Mobile payment cards
 document.getElementById('mobile-pays').innerHTML=payData.map(p=>`

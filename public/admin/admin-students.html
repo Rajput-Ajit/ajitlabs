@@ -101,7 +101,7 @@
     <!-- Filters -->
     <div class="card">
       <div class="p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3" style="border-bottom:1px solid rgba(255,255,255,0.06)">
-        <input type="text" id="search-inp" placeholder="🔍  Search name, phone, seat…" class="px-3 py-2.5 text-sm flex-1 min-w-0" oninput="filterStudents()">
+        <input type="text" id="search-inp" placeholder="🔍  Search name, phone, seat…" class="px-3 py-2.5 text-sm flex-1 min-w-0" oninput="filterStudentsSearch()">
         <div class="flex gap-2 flex-wrap">
           <select id="f-hall" class="px-3 py-2.5 text-sm flex-1 sm:flex-none" onchange="filterStudents()">
             <option value="">All Halls</option><option>Hall A</option><option>Hall B</option><option>Hall C</option>
@@ -238,6 +238,7 @@ function renderAll(data){
         <span class="ml-auto text-xs ${s.paid?'text-green-400':'text-red-400'}">${s.paid?'✓ Paid':'⚠ Due'}</span>
       </div>
     </div>`).join('');
+
   // Desktop table
   document.getElementById('desktop-table').innerHTML=slice.map(s=>`
     <tr class="cursor-pointer" onclick="showDetail(${s.id})">
@@ -296,7 +297,12 @@ function showDetail(id){
 function addStudent(){document.getElementById('add-modal').classList.add('hidden');document.body.style.overflow='';toast('Student added!')}
 function toast(msg){const t=document.createElement('div');t.className='fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-6 sm:translate-x-0 px-5 py-3 rounded-xl text-sm font-semibold text-stone-900 z-50 shadow-lg';t.style='background:linear-gradient(135deg,#c9a84c,#e8b84b)';t.textContent='✓ '+msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}
 
-renderAll(students);
+//renderAll(students);
 </script>
+<script src="../assets/js/core/ui.js"></script>
+<script src="../assets/js/core/api.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/core/helpers.js"></script>
+<script src="../assets/js/admin/students.js"></script>
 </body>
 </html>

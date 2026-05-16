@@ -103,7 +103,6 @@
             <th class="px-4 py-3 text-left">Valid Till</th>
             <th class="px-4 py-3 text-left">Fee</th>
             <th class="px-4 py-3 text-left">Status</th>
-            <th class="px-4 py-3 text-left">Actions</th>
           </tr></thead>
           <tbody id="desktop-table"></tbody>
         </table>
@@ -207,10 +206,9 @@ function renderAll(data){
         </div>
       </div>
       <div class="flex items-center gap-4 mt-2 pt-2" style="border-top:1px solid rgba(255,255,255,0.06)">
-        <span class="text-xs text-stone-400">🪑 <span class="font-mono text-amber-400">${s.seat}</span></span>
+        <span class="text-xs text-stone-400 whitespace-nowrap">🪑 <span class="font-mono text-amber-400">${s.seat}</span></span>
         <span class="text-xs text-stone-400">🏛 ${s.hall}</span>
         <span class="text-xs text-stone-400">⏰ ${s.shift}</span>
-        <span class="ml-auto text-xs ${s.paid?'text-green-400':'text-red-400'}">${s.paid?'✓ Paid':'⚠ Due'}</span>
       </div>
     </div>`).join('');
 
@@ -228,12 +226,6 @@ function renderAll(data){
       <td class="px-4 py-3 text-sm text-stone-300">${s.validTill}</td>
       <td class="px-4 py-3"><div class="text-sm text-stone-300">₹${s.fee}/mo</div><div class="text-xs ${s.paid?'text-green-400':'text-red-400'}">${s.paid?'✓ Paid':'⚠ Due'}</div></td>
       <td class="px-4 py-3"><span class="${statusCls(s.status)}">${s.status}</span></td>
-      <td class="px-4 py-3">
-        <div class="flex gap-1">
-          <button class="text-xs px-2.5 py-1.5 rounded-lg text-stone-400 hover:text-amber-400" style="background:rgba(255,255,255,0.05)" onclick="event.stopPropagation()">Edit</button>
-          <button class="text-xs px-2.5 py-1.5 rounded-lg text-red-400" style="background:rgba(239,68,68,0.08)" onclick="event.stopPropagation()">Remove</button>
-        </div>
-      </td>
     </tr>`).join('');
 }
 

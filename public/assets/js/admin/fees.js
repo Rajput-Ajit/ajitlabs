@@ -33,10 +33,11 @@ async function loadFees(){
     });
     
     const feesData = res.payments.data;
-
+    console.log(res);
     // render fees
     printDesktopFees(feesData);
-
+    // render overdues
+    overduePrint(res.overdue ?? []);
   } catch (err) {
     
   }
@@ -50,7 +51,6 @@ function printDesktopFees(payData){
   <td class="px-4 py-3 text-sm text-stone-200 font-medium">₹${p.amount}</td>
   <td class="px-4 py-3 text-sm text-stone-400">${p.payment_method}</td>
   <td class="px-4 py-3 text-sm text-stone-400">${formatDate(p.created_at)}</td>
-  <td class="px-4 py-3"><span class="${p.paid?'bg-g':'bg-r'}">${p.paid?'Paid':'Pending'}</span></td>
 </tr>`).join('');
 
 // after desktop run mobile
@@ -64,7 +64,6 @@ function printMobileFees(payData){
       <div class="flex-1 min-w-0">
         <div class="flex items-center justify-between mb-1">
           <span class="text-sm font-medium text-stone-200 truncate">${p.student_name}</span>
-          <span class="${p.paid?'bg-g':'bg-r'}">${p.paid?'Paid':'Pending'}</span>
         </div>
         <div class="flex items-center gap-3 text-xs text-stone-400">
           <span>${p.hall_name} · <span class="font-mono text-amber-400">${p.seat_number}</span></span>

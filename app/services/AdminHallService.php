@@ -202,11 +202,15 @@ class AdminHallService
     // Delete Hall Permanent
     public function delete($data, $user)
     {
-        // before creat hall check branch id exist or not?
+        // before creat/delete hall check branch id exist or not?
         if(!$this->hallModel->checkHallExistance($data['hall_id'], $data['branch_id'])){
             Response::error("Invalid Hall ID. The selected Hall does not exist.", 409);
         }
 
+        // before delete check assing student in hall
+        if($this->hallModel->checkHallAssignedStudents($data['hall_id'], $data['branch_id'])){
+            Response::error("Cannot delete hall. Students are currently assigned to this hall.", 409);
+        }
         // ✅ UPDATED: create hall (no shift columns in halls table anymore)
         $delete = $this->hallModel->deleteHall($data);
 

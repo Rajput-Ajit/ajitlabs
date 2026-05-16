@@ -143,27 +143,55 @@ class FeeModel
     public function getOverduePayments($adminId)
     {
         $stmt = $this->conn->prepare("
-            SELECT 
-                st.first_name,
-                st.last_name,
-                se.seat_number,
-                f.final_amount as amount,
-                DATEDIFF(CURDATE(), f.expiry_date) as overdue_days
-            FROM fees f
-            -- ✅ UPDATED: JOIN students (not users)
-            JOIN students st ON st.id = f.student_id
-            JOIN seats se ON se.id = f.seat_id
-            WHERE f.status = 'pending'
-            AND f.expiry_date < CURDATE()
-            AND st.admin_id = ?
-            ORDER BY overdue_days DESC
-            LIMIT 10
-        ");
+        SELECT 
+            st.first_name,
+            st.last_name,
+            se.seat_number,
+            h.name AS hall_name,
+            f.final_amount AS amount,
+            f.expiry_date,
+            DATEDIFF(CURDATE(), f.expiry_date) AS overdue_days
+
+        FROM seat_allocations sa
+
+        JOIN (
+            SELECT MAX(id) AS latest_id
+            FROM seat_allocations
+            GROUP BY student_id
+        ) latest 
+            ON latest.latest_id = sa.id
+
+        JOIN students st 
+            ON st.id = sa.student_id
+
+        JOIN seats se 
+            ON se.id = sa.seat_id
+
+        JOIN halls h
+            ON h.id = se.hall_id
+
+        JOIN fees f 
+            ON f.student_id = sa.student_id
+            AND f.seat_id = sa.seat_id
+
+        WHERE sa.status = 'active' AND DATE(f.expiry_date) < CURDATE()
+        AND st.admin_id = ?
+
+        ORDER BY overdue_days DESC
+        LIMIT 10
+    ");
+
+        if (!$stmt) {
+            die("Prepare Failed: " . $this->conn->error);
+        }
 
         $stmt->bind_param("i", $adminId);
+
         $stmt->execute();
 
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $result = $stmt->get_result();
+
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
 
     // =========================================================

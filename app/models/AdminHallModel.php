@@ -448,5 +448,28 @@ class HallModel
 
         return $stmt->affected_rows > 0;
     }
+
+    public function checkHallAssignedStudents($hall_id, $branch_id){
+        // Before delete check assigned students in hall
+
+        $checkStmt = $this->conn->prepare("
+            SELECT sa.id
+            FROM seat_allocations sa
+            WHERE sa.branch_id = ?
+            AND sa.hall_id = ?
+            AND sa.status = 'active'
+            AND sa.end_date >= CURDATE()
+
+            LIMIT 1
+        ");
+
+        $checkStmt->bind_param("ii", $branch_id, $hall_id);
+
+        $checkStmt->execute();
+
+        $checkResult = $checkStmt->get_result();
+
+        return $checkResult->num_rows > 0;
+    }
 }
 ?>

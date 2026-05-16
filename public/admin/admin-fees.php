@@ -345,27 +345,6 @@ stopLoaderSmoothly();
       </div>
     </div>
 
-    <!-- Charts: stacked on mobile -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div class="card p-4 sm:p-5 lg:col-span-2">
-        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <div><div class="font-semibold text-stone-200 text-sm sm:text-base">Revenue Trend</div><div class="text-xs text-stone-500">Monthly collection vs expected</div></div>
-        </div>
-        <div class="relative" style="height:160px"><canvas id="revChart"></canvas></div>
-      </div>
-      <div class="card p-4 sm:p-5">
-        <div class="font-semibold text-stone-200 text-sm sm:text-base mb-1">Payment Methods</div>
-        <div class="text-xs text-stone-500 mb-3">This month</div>
-        <div class="flex items-center gap-4">
-          <div class="flex-shrink-0" style="width:110px;height:110px;position:relative"><canvas id="payChart"></canvas></div>
-          <div class="space-y-2 text-xs">
-            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded" style="background:#c9a84c;display:inline-block"></span><span class="text-stone-400">Cash</span><span class="text-stone-200 font-bold ml-auto pl-2">42%</span></div>
-            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded" style="background:#3b82f6;display:inline-block"></span><span class="text-stone-400">UPI</span><span class="text-stone-200 font-bold ml-auto pl-2">38%</span></div>
-            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded" style="background:#a78bfa;display:inline-block"></span><span class="text-stone-400">Bank</span><span class="text-stone-200 font-bold ml-auto pl-2">20%</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Overdue alerts -->
     <div class="card p-4 sm:p-5">
@@ -378,12 +357,17 @@ stopLoaderSmoothly();
         <table class="w-full min-w-[500px]">
           <thead><tr>
             <th class="px-3 sm:px-4 py-2.5 text-left">Student</th>
+            <th class="px-3 sm:px-4 py-2.5 text-left">Hall Name</th>
             <th class="px-3 sm:px-4 py-2.5 text-left">Seat</th>
             <th class="px-3 sm:px-4 py-2.5 text-left">Amount</th>
             <th class="px-3 sm:px-4 py-2.5 text-left">Overdue</th>
             <th class="px-3 sm:px-4 py-2.5 text-left">Actions</th>
           </tr></thead>
-          <tbody id="dues-tbl"></tbody>
+          <tbody id="dues-tbl">
+            <td class="px-3 sm:px-4 py-3 text-sm text-stone-200 lg:text-center" colspan="6">
+              No Overdue Payments
+            </td>
+          </tbody>
         </table>
       </div>
     </div>
@@ -412,7 +396,6 @@ stopLoaderSmoothly();
             <th class="px-4 py-3 text-left">Amount</th>
             <th class="px-4 py-3 text-left">Method</th>
             <th class="px-4 py-3 text-left">Date</th>
-            <th class="px-4 py-3 text-left">Status</th>
           </tr></thead>
           <tbody id="pay-tbl"></tbody>
         </table>
@@ -468,16 +451,14 @@ new Chart(document.getElementById('payChart').getContext('2d'),{
   options:{cutout:'68%',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
 });
 
-const dues=[
-  {n:'Vikram Singh',seat:'A-15',amt:'₹1,500',days:5},{n:'Anita Bhende',seat:'B-22',amt:'₹2,000',days:8},
-  {n:'Suresh Kamble',seat:'A-31',amt:'₹1,200',days:12},{n:'Pooja Wankhede',seat:'C-8',amt:'₹1,800',days:3},
-  {n:'Rajesh Gupta',seat:'B-44',amt:'₹1,500',days:18},
-];
+function overduePrint(dues){
+  if(!dues.length) return;
 document.getElementById('dues-tbl').innerHTML=dues.map(d=>`<tr>
-  <td class="px-3 sm:px-4 py-3 text-sm text-stone-200">${d.n}</td>
-  <td class="px-3 sm:px-4 py-3"><span class="font-mono text-amber-400 text-sm">${d.seat}</span></td>
-  <td class="px-3 sm:px-4 py-3 text-red-400 font-semibold text-sm">${d.amt}</td>
-  <td class="px-3 sm:px-4 py-3"><span class="bg-r">${d.days}d</span></td>
+  <td class="px-3 sm:px-4 py-3 text-sm text-stone-200">${d.first_name} ${d.last_name}</td>
+  <td class="px-3 sm:px-4 py-3 text-sm text-stone-200">${d.hall_name}</td>
+  <td class="px-3 sm:px-4 py-3"><span class="font-mono text-amber-400 text-sm">${d.seat_number}</span></td>
+  <td class="px-3 sm:px-4 py-3 text-red-400 font-semibold text-sm">${d.amount}</td>
+  <td class="px-3 sm:px-4 py-3"><span class="bg-r">${d.overdue_days}d</span></td>
   <td class="px-3 sm:px-4 py-3">
     <div class="flex gap-1">
       <button class="text-xs px-2 py-1.5 rounded-lg text-amber-400" style="background:rgba(201,168,76,0.08)">💬</button>
@@ -485,41 +466,11 @@ document.getElementById('dues-tbl').innerHTML=dues.map(d=>`<tr>
     </div>
   </td>
 </tr>`).join('');
+}
 
 const NAMES=['Priya D.','Rohan J.','Amit K.','Sneha P.','Meera G.','Ajay P.','Neha S.','Ravi K.','Kavita J.','Deepak V.'];
 const METHODS=['Cash','UPI','Bank Transfer'];
 const HALLS=['Hall A','Hall B','Hall C'];
-const payData=Array.from({length:15},(_,i)=>({
-  n:NAMES[i%NAMES.length],hall:HALLS[i%3],seat:`A-${i+1}`,amt:[1200,1500,1800,2000][i%4],
-  method:METHODS[i%3],date:`${i+1} Mar 2026`,paid:Math.random()>0.15
-}));
-
-
-// Mobile payment cards
-document.getElementById('mobile-pays').innerHTML=payData.map(p=>`
-  <div class="pay-card flex items-center gap-3">
-    <div class="flex-1 min-w-0">
-      <div class="flex items-center justify-between mb-1">
-        <span class="text-sm font-medium text-stone-200 truncate">${p.n}</span>
-        <span class="${p.paid?'bg-g':'bg-r'}">${p.paid?'Paid':'Pending'}</span>
-      </div>
-      <div class="flex items-center gap-3 text-xs text-stone-400">
-        <span>${p.hall} · <span class="font-mono text-amber-400">${p.seat}</span></span>
-        <span>₹${p.amt}</span>
-        <span>${p.method}</span>
-        <span class="ml-auto">${p.date}</span>
-      </div>
-    </div>
-  </div>`).join('');
-
-document.getElementById('pay-tbl').innerHTML=payData.map(p=>`<tr>
-  <td class="px-4 py-3 text-sm text-stone-200">${p.n}</td>
-  <td class="px-4 py-3 text-sm text-stone-400">${p.hall} · <span class="font-mono text-amber-400">${p.seat}</span></td>
-  <td class="px-4 py-3 text-sm text-stone-200 font-medium">₹${p.amt}</td>
-  <td class="px-4 py-3 text-sm text-stone-400">${p.method}</td>
-  <td class="px-4 py-3 text-sm text-stone-400">${p.date}</td>
-  <td class="px-4 py-3"><span class="${p.paid?'bg-g':'bg-r'}">${p.paid?'Paid':'Pending'}</span></td>
-</tr>`).join('');
 
 function recordPay(){document.getElementById('pay-modal').classList.add('hidden');document.body.style.overflow='';toast('Payment recorded!')}
 function toast(msg){const t=document.createElement('div');t.className='fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:right-6 sm:translate-x-0 px-5 py-3 rounded-xl text-sm font-semibold text-stone-900 z-50 shadow-lg';t.style='background:linear-gradient(135deg,#c9a84c,#e8b84b)';t.textContent='✓ '+msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}

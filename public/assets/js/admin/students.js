@@ -154,7 +154,7 @@ function mapStudents(apiData) {
       name: name || "N/A",
       phone: s.contact,
       seat: s.seat_number || "-",
-      hall: s.branch_name || "-", // you used hall before
+      hall: s.hall_name || "-", // you used hall before
       shift: s.shift_name || "-",
       validTill: s.end_date || "-",
       fee: s.amount || 0,

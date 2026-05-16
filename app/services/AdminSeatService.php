@@ -193,6 +193,16 @@ class AdminSeatService
         }
 
         // =========================================================
+        //  Check Mobile NUmber Is Active Seat
+        // =========================================================
+        
+        $mobileActive = $seatModel->isActiveMobile($phone);
+        if($mobileActive){
+            Response::error("Seat already allocated for this mobile number", 400);
+        }
+        
+
+        // =========================================================
         // 2. GET SHIFT BY CODE (NEW — old code used hardcoded column map)
         // =========================================================
         // ✅ NEW: look up shift row from shifts table to get shift_id

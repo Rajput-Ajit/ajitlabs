@@ -1,3 +1,8 @@
+<?php
+  require_once("components/Components.php");
+
+  $sidebar = Components::sidebar("students");
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,39 +47,9 @@
 <body>
 <div id="overlay" onclick="closeSidebar()"></div>
 <aside id="sidebar">
-  <div class="p-5 border-b border-amber-900/20 flex-shrink-0">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl flex items-center justify-center text-base font-black text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">R</div>
-      <div><div class="display text-amber-300 font-bold text-lg leading-none">ReadSpace</div><div class="text-stone-500 text-xs">Admin Panel</div></div>
-    </div>
-  </div>
-  <div class="px-4 py-3 border-b border-amber-900/10 flex-shrink-0">
-    <select class="w-full text-xs px-3 py-2 rounded-lg text-amber-300" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2)">
-      <option>🏛 Nagpur Main Branch</option><option>🏛 Civil Lines</option><option>🏛 Sitabuldi</option>
-    </select>
-  </div>
-  <nav class="p-3 flex-1">
-    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-1">Main</div>
-    <a href="admin-dashboard.html" class="nl">⊞ <span>Dashboard</span></a>
-    <a href="admin-halls.html" class="nl">🏛 <span>Manage Halls</span></a>
-    <a href="admin-seats.html" class="nl">🪑 <span>Seat Manager</span></a>
-    <a href="admin-students.html" class="nl on">👥 <span>Students</span></a>
-    <a href="admin-fees.html" class="nl">💳 <span>Fees & Payments</span></a>
-    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-4">Config</div>
-    <a href="admin-branches.html" class="nl">📍 <span>Branches</span></a><a href="admin-shifts.html" class="nl">⏰ <span>Shift Timings</span></a><a href="admin-subscription.html" class="nl">⭐ <span>Subscription</span></a><a href="#" class="nl">⚙ <span>Settings</span></a>
-    <div class="text-xs text-stone-600 uppercase tracking-widest px-3 mb-2 mt-4">My Plan</div>
-    <a href="saas-overview.html" class="nl">🚀 <span>Plan Overview</span></a>
-    <a href="saas-billing.html" class="nl">🧾 <span>Billing &amp; Invoices</span></a>
-    <a href="saas-upgrade.html" class="nl">⬆ <span>Upgrade Plan</span></a>
-    <a href="saas-usage.html" class="nl">📊 <span>Usage &amp; Limits</span></a>
-  </nav>
-  <div class="p-4 border-t border-amber-900/10 flex-shrink-0">
-    <div class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-stone-900 flex-shrink-0" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">RS</div>
-      <div class="flex-1 min-w-0"><div class="text-xs text-stone-200 font-medium truncate">Rahul Sharma</div><div class="text-xs text-stone-500">Super Admin</div></div>
-      <a href="admin-login.html" class="text-stone-500 hover:text-red-400 text-lg">⏻</a>
-    </div>
-  </div>
+  <?php
+    echo $sidebar;
+  ?>
 </aside>
 
 <div id="main" class="flex flex-col min-h-screen">
@@ -92,10 +67,10 @@
   <main class="flex-1 p-4 sm:p-6 space-y-4">
     <!-- Stats – 2×2 mobile, 4 on lg -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      <div class="card p-4 flex items-center gap-3"><div class="text-2xl">👥</div><div><div class="text-xl font-bold text-stone-100">243</div><div class="text-xs text-stone-500">Total</div></div></div>
-      <div class="card p-4 flex items-center gap-3"><div class="text-2xl">✅</div><div><div class="text-xl font-bold text-green-400">195</div><div class="text-xs text-stone-500">Active</div></div></div>
-      <div class="card p-4 flex items-center gap-3"><div class="text-2xl">⚠️</div><div><div class="text-xl font-bold text-amber-400">32</div><div class="text-xs text-stone-500">Expiring</div></div></div>
-      <div class="card p-4 flex items-center gap-3"><div class="text-2xl">🆕</div><div><div class="text-xl font-bold text-blue-400">16</div><div class="text-xs text-stone-500">New/week</div></div></div>
+      <div class="card p-4 flex items-center gap-3"><div class="text-2xl">👥</div><div><div class="text-xl font-bold text-stone-100" id="stat_total">243</div><div class="text-xs text-stone-500">Total</div></div></div>
+      <div class="card p-4 flex items-center gap-3"><div class="text-2xl">✅</div><div><div class="text-xl font-bold text-green-400" id="stat_active">195</div><div class="text-xs text-stone-500">Active</div></div></div>
+      <div class="card p-4 flex items-center gap-3"><div class="text-2xl">⚠️</div><div><div class="text-xl font-bold text-amber-400" id="stat_expiring">32</div><div class="text-xs text-stone-500">Expiring</div></div></div>
+      <div class="card p-4 flex items-center gap-3"><div class="text-2xl">🆕</div><div><div class="text-xl font-bold text-blue-400" id="stat_new">16</div><div class="text-xs text-stone-500">New/week</div></div></div>
     </div>
 
     <!-- Filters -->

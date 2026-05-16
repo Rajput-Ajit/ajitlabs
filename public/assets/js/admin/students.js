@@ -38,6 +38,9 @@ async function loadStudents(){
     const mapped = mapStudents(res.data ?? {});
     renderAll(mapped);
 
+    // print stats
+    renderStats(res.stats);
+
     // load pagination
     renderPagination({
       total: window._total ?? 0,
@@ -48,6 +51,14 @@ async function loadStudents(){
   } catch (err) {
     
   }
+}
+
+// Render Overview
+function renderStats(stats){
+  let stat_new = document.getElementById("stat_new").innerText = stats.new_week;
+  let stat_expiring = document.getElementById("stat_expiring").innerText = stats.expiring;
+  let stat_active = document.getElementById("stat_active").innerText = stats.active;
+  let stat_total = document.getElementById("stat_total").innerText = stats.total;
 }
 
 //------------          PAGINATION      -------------------

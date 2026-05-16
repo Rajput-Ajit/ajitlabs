@@ -388,5 +388,29 @@ class SeatModel
         // Check if any row was actually updated
         return $stmt->affected_rows > 0;
     }
+
+    public function isActiveMobile($phone)
+    {
+        $today = date('Y-m-d');
+
+        $stmt = $this->conn->prepare("
+            SELECT sa.id
+            FROM seat_allocations sa
+            INNER JOIN students s ON s.id = sa.student_id
+            WHERE s.contact = ?
+            AND sa.status = 'active'
+            AND sa.end_date >= ?
+            LIMIT 1
+        ");
+
+        $stmt->bind_param("ss", $phone, $today);
+
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+
+        return $result->num_rows > 0;
+    }
+
 }
 ?>

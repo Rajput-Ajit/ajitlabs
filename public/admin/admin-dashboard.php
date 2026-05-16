@@ -1,7 +1,7 @@
 <?php
   require_once("components/Components.php");
 
-  $sidebar = Components::sidebar();
+  $sidebar = Components::sidebar("dashboard");
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -202,14 +202,8 @@
       <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
     </button>
     <div class="flex-1 min-w-0">
-      <div class="display text-base sm:text-xl text-stone-100 font-bold leading-tight">Good morning, Rahul 👋</div>
-      <div class="text-xs text-stone-500 hidden sm:block">Wednesday, 18 March 2026 · Nagpur Main</div>
-    </div>
-    <div class="flex items-center gap-2 flex-shrink-0">
-      <button class="relative w-9 h-9 flex items-center justify-center rounded-xl text-stone-400 hover:text-amber-400" style="background:rgba(255,255,255,0.05)">
-        🔔<span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500"></span>
-      </button>
-      <a href="admin-seats.html" class="text-xs px-3 py-2 rounded-xl font-semibold text-stone-900 whitespace-nowrap hidden sm:block" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">+ Assign Seat</a>
+      <!--<div class="display text-base sm:text-xl text-stone-100 font-bold leading-tight">Good morning, Rahul 👋</div> -->
+      <div class="text-xs text-stone-500 hidden sm:block"><?php echo date("l, d F Y");?></div>
     </div>
   </header>
 
@@ -222,18 +216,17 @@
           <div class="text-2xl sm:text-3xl">🏛</div>
           <span class="bg bg-g hidden sm:inline">+2 new</span>
         </div>
-        <div class="text-2xl sm:text-3xl font-bold text-stone-100 display">3</div>
+        <div class="text-2xl sm:text-3xl font-bold text-stone-100 display" data-stat="total_halls">0</div>
         <div class="text-stone-400 text-xs sm:text-sm mt-0.5">Active Halls</div>
         <div class="text-xs text-stone-600 mt-0.5 hidden sm:block">Across 2 branches</div>
       </div>
       <div class="stat p-4 sm:p-5">
         <div class="flex items-start justify-between mb-2 sm:mb-3">
           <div class="text-2xl sm:text-3xl">🪑</div>
-          <span class="bg bg-a hidden sm:inline">82%</span>
+          <span class="bg bg-a hidden sm:inline" data-stat="occupancy_pct">0%</span>
         </div>
-        <div class="text-2xl sm:text-3xl font-bold text-stone-100 display">148<span class="text-base sm:text-lg text-stone-500">/180</span></div>
+        <div class="text-2xl sm:text-3xl font-bold text-stone-100 display" data-stat="occupied_seats">0</div>
         <div class="text-stone-400 text-xs sm:text-sm mt-0.5">Seats Occupied</div>
-        <div class="pb h-1.5 mt-1.5"><div class="h-full rounded-full bg-amber-400" style="width:82%"></div></div>
       </div>
       <div class="stat p-4 sm:p-5">
         <div class="flex items-start justify-between mb-2 sm:mb-3">
@@ -257,19 +250,6 @@
 
     <!-- Charts row – stacked on mobile -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div class="card p-4 sm:p-5 lg:col-span-2">
-        <div class="flex items-center justify-between mb-3 sm:mb-4 flex-wrap gap-2">
-          <div>
-            <div class="font-semibold text-stone-200 text-sm sm:text-base">Revenue Overview</div>
-            <div class="text-xs text-stone-500">Last 6 months</div>
-          </div>
-          <div class="flex gap-1.5">
-            <button class="text-xs px-2.5 py-1 rounded-lg text-amber-400 font-medium" style="background:rgba(201,168,76,0.15)">Monthly</button>
-            <button class="text-xs px-2.5 py-1 rounded-lg text-stone-500">Weekly</button>
-          </div>
-        </div>
-        <div class="relative" style="height:160px"><canvas id="revChart"></canvas></div>
-      </div>
       <div class="card p-4 sm:p-5">
         <div class="font-semibold text-stone-200 text-sm sm:text-base mb-1">Seat Status</div>
         <div class="text-xs text-stone-500 mb-3">Real-time overview</div>
@@ -341,30 +321,12 @@
       <div class="card p-4 sm:p-5">
         <div class="flex justify-between items-center mb-3">
           <div class="font-semibold text-stone-200 text-sm sm:text-base">Fee Alerts</div>
-          <span class="bg bg-r">8 pending</span>
+          <span class="bg bg-r" id="pendingCount">8 pending</span>
         </div>
         <div id="fee-alerts" class="space-y-2"></div>
         <a href="admin-fees.html" class="block mt-3 text-center text-xs text-amber-400 hover:underline">Manage Fees →</a>
       </div>
     </div>
-
-    <!-- Quick Seat Grid -->
-    <div class="card p-4 sm:p-5">
-      <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-        <div>
-          <div class="font-semibold text-stone-200 text-sm sm:text-base">Hall A – Quick Seat View</div>
-          <div class="text-xs text-stone-500">Click any seat for details</div>
-        </div>
-        <div class="flex items-center gap-3 text-xs flex-wrap">
-          <span class="flex items-center gap-1 text-stone-400"><span class="w-3 h-3 rounded dot e"></span>Empty</span>
-          <span class="flex items-center gap-1 text-stone-400"><span class="w-3 h-3 rounded dot o"></span>Occupied</span>
-          <span class="flex items-center gap-1 text-stone-400"><span class="w-3 h-3 rounded dot h"></span>Half-day</span>
-          <a href="admin-seats.html" class="text-amber-400 hover:underline">Full View →</a>
-        </div>
-      </div>
-      <div id="seat-grid" class="flex flex-wrap gap-1.5"></div>
-    </div>
-
   </main>
 </div>
 
@@ -384,18 +346,6 @@ function closeSidebar(){document.getElementById('sidebar').classList.remove('ope
 function checkMenuBtn(){document.getElementById('menu-btn').style.display=window.innerWidth>=1024?'none':'flex'}
 checkMenuBtn();window.addEventListener('resize',checkMenuBtn);
 
-// Revenue Chart
-new Chart(document.getElementById('revChart').getContext('2d'),{
-  type:'bar',
-  data:{
-    labels:['Oct','Nov','Dec','Jan','Feb','Mar'],
-    datasets:[
-      {label:'Revenue',data:[82000,95000,110000,88000,118000,124000],backgroundColor:'rgba(201,168,76,0.65)',borderColor:'#c9a84c',borderWidth:1,borderRadius:6},
-      {label:'Collected',data:[75000,88000,102000,80000,110000,116000],backgroundColor:'rgba(59,130,246,0.45)',borderColor:'#3b82f6',borderWidth:1,borderRadius:6}
-    ]
-  },
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10},boxWidth:12}}},scales:{x:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#64748b',font:{size:10},callback:v=>'₹'+v/1000+'k'},grid:{color:'rgba(255,255,255,0.04)'}}}}
-});
 
 // Donut
 new Chart(document.getElementById('seatChart').getContext('2d'),{
@@ -422,64 +372,8 @@ document.getElementById('activity-list').innerHTML=acts.map(a=>`
     <span class="text-xs text-stone-600 whitespace-nowrap flex-shrink-0">${a.t}</span>
   </div>`).join('');
 
-// Fee alerts
-const dues=[
-  {n:'Vikram Singh',amt:'₹1,500',d:5},
-  {n:'Anita Bhende',amt:'₹2,000',d:8},
-  {n:'Suresh Kamble',amt:'₹1,200',d:12},
-  {n:'Pooja Wankhede',amt:'₹1,800',d:3},
-];
-document.getElementById('fee-alerts').innerHTML=dues.map(d=>`
-  <div class="flex items-center justify-between p-2.5 rounded-xl" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15)">
-    <div class="min-w-0 flex-1 mr-2">
-      <div class="text-xs font-medium text-stone-200 truncate">${d.n}</div>
-      <div class="text-xs text-red-400">${d.amt} · ${d.d}d overdue</div>
-    </div>
-    <button class="text-xs px-2 py-1 rounded-lg text-amber-400 flex-shrink-0" style="background:rgba(201,168,76,0.1)">Remind</button>
-  </div>`).join('');
 
-// Seat grid
-const seatData=Array.from({length:60},(_,i)=>{
-  const r=Math.random();
-  const s=r<0.78?(r<0.4?'o':'h'):'e';
-  return{id:i+1,status:s,name:['Priya D.','Rohan J.','Amit K.','Sneha P.'][Math.floor(Math.random()*4)],shift:r<0.5?'Morning':'Evening'};
-});
-const grid=document.getElementById('seat-grid');
-seatData.forEach(s=>{
-  const el=document.createElement('div');
-  el.className=`dot ${s.status}`;
-  el.title=`Seat ${s.id}`;
-  el.onclick=()=>showModal(s);
-  grid.appendChild(el);
-});
 
-function showModal(s){
-  const c={e:'#3b82f6',o:'#ef4444',h:'#f59e0b'}[s.status];
-  const lbl={e:'Empty',o:'Occupied',h:'Half-day'}[s.status];
-  document.getElementById('modal-body').innerHTML=`
-    <div class="text-center mb-4">
-      <div class="w-14 h-14 rounded-2xl mx-auto mb-3 flex items-center justify-center text-2xl" style="background:${c}22;border:2px solid ${c}">🪑</div>
-      <div class="display text-xl font-bold text-stone-100">Seat ${s.id}</div>
-      <span class="text-xs px-3 py-1 rounded-full font-semibold" style="background:${c}22;color:${c}">${lbl.toUpperCase()}</span>
-    </div>
-    ${s.status!=='e'?`
-    <div class="space-y-2 text-sm">
-      ${[['Student',s.name],['Shift',s.shift],['Valid Till','31 Mar 2026'],['Fee Status','Paid']].map(([k,v])=>`
-      <div class="flex justify-between py-2" style="border-bottom:1px solid rgba(255,255,255,0.06)">
-        <span class="text-stone-400">${k}</span>
-        <span class="text-stone-200 font-medium">${v}</span>
-      </div>`).join('')}
-    </div>
-    <div class="flex gap-2 mt-4">
-      <button class="flex-1 py-2.5 rounded-xl text-xs font-semibold text-stone-900" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Edit</button>
-      <button class="flex-1 py-2.5 rounded-xl text-xs font-semibold text-red-400" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2)">Release</button>
-    </div>`:
-    `<div class="text-center py-3">
-      <p class="text-stone-400 text-sm mb-4">This seat is currently empty</p>
-      <a href="admin-seats.html"><button class="w-full py-2.5 rounded-xl text-xs font-semibold text-stone-900" style="background:linear-gradient(135deg,#c9a84c,#e8b84b)">Assign Student</button></a>
-    </div>`}`;
-  document.getElementById('seat-modal').classList.remove('hidden');
-}
 </script>
 <script src="../assets/js/core/ui.js"></script>
 <script src="../assets/js/core/api.js"></script>

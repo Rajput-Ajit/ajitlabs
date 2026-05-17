@@ -18,12 +18,14 @@
 class AdminDashboardService
 {
     private $model;
+    private $feeModel;
 
     public function __construct()
     {
         // ✅ UPDATED: key name 'adminDashboardModel' (was 'dashboardModel')
-        App::use('adminDashboardModel');
+        App::useMany(['adminDashboardModel', 'feeModel']);
         $this->model = new DashboardModel();
+        $this->feeModel = new FeeModel();
     }
 
     public function data($user)
@@ -36,7 +38,7 @@ class AdminDashboardService
         $revenue  = $this->model->getRevenueChart($adminId);
         $seats    = $this->model->getSeatStats($adminId);
         $activity = $this->model->getRecentActivity($adminId);
-        $alerts   = $this->model->getFeeAlerts($adminId);
+        $alerts   = $this->feeModel->getOverduePayments($adminId);
 
         return [
             'stats' => [

@@ -97,7 +97,7 @@ function _renderStats(stats) {
 // ─── Recent activity table ────────────────────────────────────────────────────
 
 function _renderActivity(activity) {
-  const tbody = Dom.el('#recent-activity');
+  const tbody = Dom.el('#activity-list');
   if (!tbody) return;
 
   if (!activity || activity.length === 0) {
@@ -110,11 +110,39 @@ function _renderActivity(activity) {
   }
 
   Dom.html(tbody, activity.map(row => `
-    <tr>
-      <td>${Dom._escape(row.student_name || row.first_name || '—')}</td>
-      <td>${Dom._escape(row.action || 'Seat Allocated')}</td>
-      <td>${Format.relativeTime(row.created_at)}</td>
-    </tr>
+    
+    <div 
+      class="flex items-start gap-3 py-3 px-2 rounded-xl hover:bg-white/5 transition-all"
+      style="border-bottom:1px solid rgba(255,255,255,0.05)"
+    >
+
+      <!-- Icon -->
+      <span class="text-xl flex-shrink-0 mt-0.5">
+        📌
+      </span>
+
+      <!-- Content -->
+      <div class="flex-1 min-w-0">
+
+        <!-- Student -->
+        <div class="text-xs sm:text-sm font-medium text-stone-200 truncate">
+          ${Dom._escape(row.student_name || row.first_name || '—')}
+        </div>
+
+        <!-- Action -->
+        <div class="text-xs text-stone-500 truncate mt-0.5">
+          ${Dom._escape(row.action || 'Seat Allocated')}
+        </div>
+
+      </div>
+
+      <!-- Time -->
+      <span class="text-[11px] text-stone-600 whitespace-nowrap flex-shrink-0">
+        ${Format.relativeTime(row.created_at)}
+      </span>
+
+    </div>
+
   `).join(''));
 }
 
@@ -122,6 +150,8 @@ function _renderActivity(activity) {
 
 function _renderFeeAlerts(alerts) {
   const tbody = Dom.el('#fee-alerts');
+  const pendingCount = Dom.el('#pendingCount');
+        pendingCount.innerText = `${alerts.length}  Pending`;
   if (!tbody) return;
 
   if (!alerts || alerts.length === 0) {
@@ -134,11 +164,82 @@ function _renderFeeAlerts(alerts) {
   }
 
   Dom.html(tbody, alerts.map(row => `
-    <tr>
-      <td>${Dom._escape(row.first_name || '—')} ${Dom._escape(row.last_name || '')}</td>
-      <td>${Format.currency(row.amount)}</td>
-      <td style="color:#f87171">${row.overdue_days} days overdue</td>
-    </tr>
+                                  <div 
+                                class="flex items-center gap-3 py-3 px-2 rounded-xl hover:bg-white/5 transition-all"
+                                style="border-bottom:1px solid rgba(255,255,255,0.05)"
+                              >
+
+                                <!-- Avatar -->
+                                <div 
+                                  class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+                                  style="
+                                    background:linear-gradient(135deg,#ef4444,#dc2626);
+                                    box-shadow:0 4px 10px rgba(239,68,68,0.25);
+                                  "
+                                >
+                                  ${Dom._escape((row.first_name || 'U')[0])}
+                                </div>
+
+                                <!-- Student Info -->
+                                <div class="flex-1 min-w-0">
+
+                                  <div class="text-sm font-semibold text-stone-200 truncate">
+                                    ${Dom._escape(row.first_name || '—')}
+                                    ${Dom._escape(row.last_name || '')}
+                                  </div>
+                                  <span
+                                    style="
+                                      display:inline-block;
+                                      max-width:120px;
+                                      overflow:hidden;
+                                      text-overflow:ellipsis;
+                                      white-space:nowrap;
+                                      font-size:11px;
+                                      color:#94a3b8;
+                                      vertical-align:middle;
+                                    "
+                                    title="${Dom._escape(row.hall_name || '—')}"
+                                  >
+                                    (${Dom._escape(row.hall_name || '—')})
+                                  </span>
+
+                                  <div class="flex items-center gap-2 mt-1 flex-wrap">
+
+                                    <!-- Amount -->
+                                    <span class="
+                                      text-xs
+                                      px-2.5 py-1
+                                      rounded-full
+                                      bg-emerald-500/10
+                                      text-emerald-400
+                                      border border-emerald-400/10
+                                      font-medium
+                                    ">
+                                      ${Format.currency(row.amount)}
+                                    </span>
+                                  </div>
+
+                                </div>
+
+                                <!-- Overdue -->
+                                <div 
+                                  class="
+                                    text-xs
+                                    font-semibold
+                                    whitespace-nowrap
+                                    px-3 py-1.5
+                                    rounded-full
+                                  "
+                                  style="
+                                    background:rgba(239,68,68,0.12);
+                                    color:#f87171;
+                                    border:1px solid rgba(248,113,113,0.12);
+                                  "
+                                >
+                                  ⚠ ${row.overdue_days} Days
+                                </div>
+
+                              </div>
   `).join(''));
 }
 

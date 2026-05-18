@@ -39,7 +39,7 @@ class AdminDashboardService
         $seats    = $this->model->getSeatStats($adminId);
         $activity = $this->model->getRecentActivity($adminId);
         $alerts   = $this->feeModel->getOverduePayments($adminId);
-
+        $hallOverview = $this->model->getHallOverview($adminId);
         return [
             'stats' => [
                 'total_halls'      => (int)($stats['total_halls']      ?? 0),
@@ -54,6 +54,7 @@ class AdminDashboardService
             ],
             'activity'   => $activity,
             'fee_alerts' => $alerts,
+            'hall_overview' => $hallOverview ?? []
         ];
     }
 }

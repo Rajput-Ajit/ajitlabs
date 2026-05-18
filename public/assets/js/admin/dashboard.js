@@ -44,6 +44,7 @@ async function loadDashboard() {
     _renderFeeAlerts(res.fee_alerts);
     _renderChartData(res.charts);
 
+    renderHallOverview(res.hall_overview);
     // my page animation ends here
     const loader = document.getElementById("initial-loader");
 
@@ -118,7 +119,7 @@ function _renderActivity(activity) {
 
       <!-- Icon -->
       <span class="text-xl flex-shrink-0 mt-0.5">
-        📌
+        ⏰
       </span>
 
       <!-- Content -->
@@ -357,4 +358,86 @@ function showEmptyDashboard(data = {}) {
 
     </div>
   `;
+}
+
+function renderHallOverview(halls = []) {
+
+    const hallContainer = document.querySelector('#hallOverview');
+
+    if (!hallContainer) return;
+
+    if (halls.length === 0) {
+
+        hallContainer.innerHTML = `
+            <div class="text-center text-stone-500 text-sm py-6">
+                No halls found
+            </div>
+        `;
+
+        return;
+    }
+
+    hallContainer.innerHTML = halls.map((hall, index) => {
+
+        const occupied = Number(hall.occupied_seats || 0);
+        const total = Number(hall.total_seats || 0);
+
+        const percentage = total > 0
+            ? Math.round((occupied / total) * 100)
+            : 0;
+
+        let statusClass = 'bg-g';
+        let progressClass = 'bg-green-500';
+        let statusText = 'Open';
+
+        if (percentage >= 90) {
+            statusClass = 'bg-a';
+            progressClass = 'bg-amber-400';
+            statusText = 'Active';
+        }
+
+        const progressColors = [
+            'bg-green-500',
+            'bg-amber-400',
+            'bg-blue-500'
+        ];
+
+        progressClass = progressColors[index % progressColors.length];
+
+        return `
+            <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.04)">
+                
+                <div class="flex justify-between items-center mb-1.5">
+                    
+                    <div>
+                        <div class="text-xs sm:text-sm font-semibold text-stone-200">
+                            ${hall.hall_name} – ${hall.shift_name}
+                        </div>
+
+                        <div class="text-xs text-stone-500">
+                            ${hall.timing} · ${total} seats
+                        </div>
+                    </div>
+
+                    <span class="bg ${statusClass}">
+                        ${statusText}
+                    </span>
+
+                </div>
+
+                <div class="pb h-1.5">
+                    <div 
+                        class="h-full rounded-full ${progressClass}" 
+                        style="width:${percentage}%">
+                    </div>
+                </div>
+
+                <div class="text-xs text-stone-500 mt-1">
+                    ${occupied}/${total} seats
+                </div>
+
+            </div>
+        `;
+
+    }).join('');
 }

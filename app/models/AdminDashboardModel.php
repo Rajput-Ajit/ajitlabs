@@ -204,5 +204,83 @@ class DashboardModel
 
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
+
+    public function getHallOverview($adminId)
+    {
+        $stmt = $this->conn->prepare("
+            SELECT 
+                h.id AS hall_id,
+                h.name AS hall_name,
+
+                sh.id AS shift_id,
+                sh.name AS shift_name,
+                sh.code AS shift_code,
+                sh.start_time,
+                sh.end_time,
+
+                COUNT(s.id) AS total_seats,
+
+                COUNT(DISTINCT CASE 
+                    WHEN sa.status = 'active'
+                    AND sa.end_date >= CURDATE()
+                    AND sa.shift_id = sh.id
+                    THEN sa.seat_id
+                END) AS occupied_seats
+
+            FROM halls h
+
+            JOIN branches b 
+                ON b.id = h.branch_id
+
+            JOIN shifts sh
+                ON sh.hall_id = h.id
+                AND sh.code = 'fullday'
+                AND sh.is_active = 1
+
+            LEFT JOIN seats s 
+                ON s.hall_id = h.id
+                AND s.deleted_at IS NULL
+
+            LEFT JOIN seat_allocations sa 
+                ON sa.hall_id = h.id
+                AND sa.seat_id = s.id
+
+            WHERE b.admin_id = ?
+            AND h.deleted_at IS NULL
+
+            GROUP BY h.id, sh.id
+
+            ORDER BY h.id DESC
+
+            LIMIT 3
+        ");
+
+        $stmt->bind_param("i", $adminId);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+
+        $data = [];
+
+        while($row = $result->fetch_assoc()){
+
+            $data[] = [
+                'hall_id'        => (int)$row['hall_id'],
+                'hall_name'      => $row['hall_name'],
+
+                'shift_name'     => $row['shift_name'],
+                'shift_code'     => $row['shift_code'],
+
+                'timing'         => date('gA', strtotime($row['start_time'])) 
+                                . '-' . 
+                                date('gA', strtotime($row['end_time'])),
+
+                'total_seats'    => (int)$row['total_seats'],
+                'occupied_seats' => (int)$row['occupied_seats']
+            ];
+        }
+
+        return $data;
+    }
 }
 ?>

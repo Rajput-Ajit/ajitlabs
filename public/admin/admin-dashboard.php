@@ -214,11 +214,9 @@
       <div class="stat p-4 sm:p-5">
         <div class="flex items-start justify-between mb-2 sm:mb-3">
           <div class="text-2xl sm:text-3xl">🏛</div>
-          <span class="bg bg-g hidden sm:inline">+2 new</span>
         </div>
         <div class="text-2xl sm:text-3xl font-bold text-stone-100 display" data-stat="total_halls">0</div>
         <div class="text-stone-400 text-xs sm:text-sm mt-0.5">Active Halls</div>
-        <div class="text-xs text-stone-600 mt-0.5 hidden sm:block">Across 2 branches</div>
       </div>
       <div class="stat p-4 sm:p-5">
         <div class="flex items-start justify-between mb-2 sm:mb-3">
@@ -231,36 +229,16 @@
       <div class="stat p-4 sm:p-5">
         <div class="flex items-start justify-between mb-2 sm:mb-3">
           <div class="text-2xl sm:text-3xl">👥</div>
-          <span class="bg bg-g hidden sm:inline">↑12</span>
         </div>
-        <div class="text-2xl sm:text-3xl font-bold text-stone-100 display">243</div>
-        <div class="text-stone-400 text-xs sm:text-sm mt-0.5">Total Students</div>
-        <div class="text-xs text-stone-600 mt-0.5 hidden sm:block">195 active subs</div>
+        <div class="text-2xl sm:text-3xl font-bold text-stone-100 display" data-stat="total_seats">0</div>
+        <div class="text-stone-400 text-xs sm:text-sm mt-0.5">Total Seats</div>
       </div>
       <div class="stat p-4 sm:p-5">
         <div class="flex items-start justify-between mb-2 sm:mb-3">
           <div class="text-2xl sm:text-3xl">💰</div>
-          <span class="bg bg-g hidden sm:inline">↑₹18k</span>
         </div>
-        <div class="text-xl sm:text-3xl font-bold text-stone-100 display">₹1.24L</div>
+        <div class="text-xl sm:text-3xl font-bold text-stone-100 display" data-stat="monthly_revenue">0</div>
         <div class="text-stone-400 text-xs sm:text-sm mt-0.5">Monthly Revenue</div>
-        <div class="text-xs text-red-400 mt-0.5">⚠ 8 dues pending</div>
-      </div>
-    </div>
-
-    <!-- Charts row – stacked on mobile -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div class="card p-4 sm:p-5">
-        <div class="font-semibold text-stone-200 text-sm sm:text-base mb-1">Seat Status</div>
-        <div class="text-xs text-stone-500 mb-3">Real-time overview</div>
-        <div class="flex items-center gap-4">
-          <div class="relative flex-shrink-0" style="width:110px;height:110px"><canvas id="seatChart"></canvas></div>
-          <div class="space-y-2 text-xs">
-            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded flex-shrink-0" style="background:#ef4444"></span><span class="text-stone-400">Occupied</span><span class="text-stone-200 font-bold ml-auto pl-3">148</span></div>
-            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded flex-shrink-0" style="background:#3b82f6"></span><span class="text-stone-400">Empty</span><span class="text-stone-200 font-bold ml-auto pl-3">22</span></div>
-            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded flex-shrink-0" style="background:#f59e0b"></span><span class="text-stone-400">Half-day</span><span class="text-stone-200 font-bold ml-auto pl-3">10</span></div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -270,7 +248,7 @@
       <!-- Hall Summary -->
       <div class="card p-4 sm:p-5">
         <div class="font-semibold text-stone-200 mb-3 text-sm sm:text-base">Hall Overview</div>
-        <div class="space-y-2.5">
+        <div class="space-y-2.5" id="hallOverview">
           <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.04)">
             <div class="flex justify-between items-center mb-1.5">
               <div>
@@ -305,7 +283,7 @@
             <div class="text-xs text-stone-500 mt-1">46/60 seats</div>
           </div>
         </div>
-        <a href="admin-halls.html" class="block mt-3 text-center text-xs text-amber-400 hover:underline">Manage All Halls →</a>
+        <a href="admin-halls.php" class="block mt-3 text-center text-xs text-amber-400 hover:underline">Manage All Halls →</a>
       </div>
 
       <!-- Activity -->
@@ -321,7 +299,7 @@
       <div class="card p-4 sm:p-5">
         <div class="flex justify-between items-center mb-3">
           <div class="font-semibold text-stone-200 text-sm sm:text-base">Fee Alerts</div>
-          <span class="bg bg-r" id="pendingCount">8 pending</span>
+          <span class="bg bg-r" id="pendingCount">0 pending</span>
         </div>
         <div id="fee-alerts" class="space-y-2"></div>
         <a href="admin-fees.html" class="block mt-3 text-center text-xs text-amber-400 hover:underline">Manage Fees →</a>
@@ -345,33 +323,6 @@ function closeSidebar(){document.getElementById('sidebar').classList.remove('ope
 // Hide menu btn on desktop
 function checkMenuBtn(){document.getElementById('menu-btn').style.display=window.innerWidth>=1024?'none':'flex'}
 checkMenuBtn();window.addEventListener('resize',checkMenuBtn);
-
-
-// Donut
-new Chart(document.getElementById('seatChart').getContext('2d'),{
-  type:'doughnut',
-  data:{labels:['Occupied','Empty','Half-day'],datasets:[{data:[148,22,10],backgroundColor:['#ef4444','#3b82f6','#f59e0b'],borderWidth:0}]},
-  options:{cutout:'70%',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
-});
-
-// Activity
-const acts=[
-  {n:'Priya Deshmukh',a:'Seat A-12 assigned',t:'2 min ago',i:'🪑'},
-  {n:'Rohan Joshi',a:'Fee paid ₹1,500',t:'15 min ago',i:'💰'},
-  {n:'Amit Khurrana',a:'Seat B-34 released',t:'1 hr ago',i:'🔓'},
-  {n:'Sneha Patil',a:'New admission',t:'2 hrs ago',i:'✅'},
-  {n:'Vikram Singh',a:'Fee overdue 5 days',t:'3 hrs ago',i:'⚠️'},
-];
-document.getElementById('activity-list').innerHTML=acts.map(a=>`
-  <div class="flex items-start gap-3 py-2" style="border-bottom:1px solid rgba(255,255,255,0.05)">
-    <span class="text-xl flex-shrink-0 mt-0.5">${a.i}</span>
-    <div class="flex-1 min-w-0">
-      <div class="text-xs sm:text-sm font-medium text-stone-200 truncate">${a.n}</div>
-      <div class="text-xs text-stone-500 truncate">${a.a}</div>
-    </div>
-    <span class="text-xs text-stone-600 whitespace-nowrap flex-shrink-0">${a.t}</span>
-  </div>`).join('');
-
 
 
 </script>

@@ -136,43 +136,55 @@ class HallModel
     // =========================================================
     public function createShifts($hallId, $data)
     {
-        // Build shifts array from old-style flat input
-        // Old API sent: morning_start, morning_end, morning_fees, evening_start...
-        // We translate those into shift rows
-        $shifts = [
-            [
+        $shifts = [];
+
+        // Morning
+        if (isset($data['morning_start'], $data['morning_end'])) {
+
+            $shifts[] = [
                 'name'        => 'Morning',
                 'code'        => 'morning',
                 'start_time'  => $data['morning_start'],
                 'end_time'    => $data['morning_end'],
                 'monthly_fee' => $data['morning_fees'] ?? 0,
                 'order'       => 1
-            ],
-            [
+            ];
+        }
+
+        // Evening
+        if (isset($data['evening_start'], $data['evening_end'])) {
+
+            $shifts[] = [
                 'name'        => 'Evening',
                 'code'        => 'evening',
                 'start_time'  => $data['evening_start'],
                 'end_time'    => $data['evening_end'],
                 'monthly_fee' => $data['evening_fees'] ?? 0,
                 'order'       => 2
-            ],
-            [
+            ];
+        }
+
+        // Full Day
+        if (isset($data['full_day_start'], $data['full_day_end'])) {
+
+            $shifts[] = [
                 'name'        => 'Full Day',
                 'code'        => 'fullday',
                 'start_time'  => $data['full_day_start'],
                 'end_time'    => $data['full_day_end'],
                 'monthly_fee' => $data['full_day_fees'] ?? 0,
                 'order'       => 3
-            ]
-        ];
+            ];
+        }
 
         $stmt = $this->conn->prepare("
-            INSERT INTO shifts 
+            INSERT INTO shifts
             (hall_id, name, code, start_time, end_time, monthly_fee, display_order)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         ");
 
         foreach ($shifts as $shift) {
+
             $stmt->bind_param(
                 "issssdi",
                 $hallId,
@@ -183,6 +195,7 @@ class HallModel
                 $shift['monthly_fee'],
                 $shift['order']
             );
+
             $stmt->execute();
         }
     }

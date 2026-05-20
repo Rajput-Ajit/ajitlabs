@@ -412,9 +412,31 @@ Loader.stop();
       <div>
         <label class="text-xs text-stone-400 uppercase mb-2 block">Monthly Fees (₹)</label>
         <div class="grid grid-cols-3 gap-2">
-          <input name="morning_fees" data-group="morning" id="morning_fees" type="number" placeholder="Morning" class="w-full px-3 py-2.5 text-sm text-center">
-          <input name="evening_fees" data-group="evening" id="evening_fees" type="number" placeholder="Evening" class="w-full px-3 py-2.5 text-sm text-center">
-          <input name="full_day_fees" data-group="full_day" id="full_day_fees" type="number" placeholder="Full Day" class="w-full px-3 py-2.5 text-sm text-center">
+
+          <div class="fee-box" data-fees-group="morning">
+            <input name="morning_fees"
+                  data-group="morning"
+                  type="number"
+                  placeholder="Morning"
+                  class="w-full px-3 py-2.5 text-sm text-center">
+          </div>
+
+          <div class="fee-box" data-fees-group="evening">
+            <input name="evening_fees"
+                  data-group="evening"
+                  type="number"
+                  placeholder="Evening"
+                  class="w-full px-3 py-2.5 text-sm text-center">
+          </div>
+
+          <div class="fee-box" data-fees-group="full_day">
+            <input name="full_day_fees"
+                  data-group="full_day"
+                  type="number"
+                  placeholder="Full Day"
+                  class="w-full px-3 py-2.5 text-sm text-center">
+          </div>
+
         </div>
       </div>
 
@@ -436,60 +458,109 @@ Loader.stop();
   </div>
 </div>
 <script>
- document.addEventListener("DOMContentLoaded", () => {
+
+document.addEventListener("DOMContentLoaded", () => {
 
   const shifts = document.querySelectorAll(".shift");
 
-  // attach event
+  // attach events
   shifts.forEach(shift => {
     shift.addEventListener("change", handleShiftChange);
   });
 
-  // run once on load
+  // run on page load
   handleShiftChange();
+
 });
 
 function handleShiftChange(e) {
+
   const shifts = document.querySelectorAll(".shift");
   const checked = document.querySelectorAll(".shift:checked");
 
-  // ❌ prevent unchecking all
+  // prevent all unchecked
   if (checked.length === 0) {
-    if (e) e.target.checked = true;
+
+    if (e) {
+      e.target.checked = true;
+    }
+
     alert("At least one shift must be selected");
     return;
   }
 
   shifts.forEach(shift => {
+
     const group = shift.dataset.group;
 
-    // get full block (Morning / Evening / Full Day)
-    const block = document.querySelector(`.shift-block[data-group="${group}"]`);
+    // timing block
+    const block = document.querySelector(
+      `.shift-block[data-group="${group}"]`
+    );
 
-    // get all inputs of that group
-    const inputs = document.querySelectorAll(`input[data-group="${group}"]`);
+    // fee wrapper
+    const feeBox = document.querySelector(
+      `.fee-box[data-fees-group="${group}"]`
+    );
+
+    // all related inputs
+    const inputs = document.querySelectorAll(
+      `input[data-group="${group}"]`
+    );
 
     if (shift.checked) {
-      // ✅ show block
-      if (block) block.classList.remove("hidden");
 
-      // ✅ make required
+      // show timing section
+      if (block) {
+        block.classList.remove("hidden");
+      }
+
+      // show fees
+      if (feeBox) {
+        feeBox.classList.remove("hidden");
+      }
+
+      // enable inputs
       inputs.forEach(input => {
+
+        // skip checkbox itself
+        if (input.classList.contains("shift")) return;
+
         input.required = true;
+        input.disabled = false;
+
       });
 
     } else {
-      // ❌ hide block
-      if (block) block.classList.add("hidden");
 
-      // ❌ remove required + clear values
+      // hide timing section
+      if (block) {
+        block.classList.add("hidden");
+      }
+
+      // hide fees
+      if (feeBox) {
+        feeBox.classList.add("hidden");
+      }
+
+      // disable inputs
       inputs.forEach(input => {
+
+        // skip checkbox itself
+        if (input.classList.contains("shift")) return;
+
         input.required = false;
+        input.disabled = true;
         input.value = "";
+
       });
+
     }
+
   });
+
 }
+
 </script>
 
 <!--    EDITING     -->

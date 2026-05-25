@@ -85,7 +85,6 @@
         <button class="tab" onclick="setTab('notifications',this)">🔔 Notifications</button>
         <button class="tab" onclick="setTab('accounts',this)">👤 Admin Accounts</button>
         <button class="tab" onclick="setTab('security',this)">🔒 Security</button>
-        <button class="tab" onclick="setTab('danger',this)">⚠ Danger Zone</button>
       </div>
     </div>
 
@@ -127,33 +126,6 @@
         </div>
       </div>
 
-      <div class="settings-section">
-        <div class="section-header">
-          <div class="text-sm font-semibold text-stone-300">🎨 Appearance</div>
-        </div>
-        <div class="setting-row">
-          <div>
-            <div class="text-sm text-stone-300 font-medium">Compact Mode</div>
-            <div class="text-xs text-stone-600">Reduce padding and spacing in the admin panel</div>
-          </div>
-          <label class="tog"><input type="checkbox"><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div>
-            <div class="text-sm text-stone-300 font-medium">Show Seat Map on Dashboard</div>
-            <div class="text-xs text-stone-600">Display mini seat map widget in dashboard overview</div>
-          </div>
-          <label class="tog"><input type="checkbox" checked><span class="slider"></span></label>
-        </div>
-        <div class="p-4 sm:p-5">
-          <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Date Format</label>
-          <select class="w-full sm:w-48 px-3 py-2.5 text-sm">
-            <option>DD/MM/YYYY</option>
-            <option>MM/DD/YYYY</option>
-            <option>YYYY-MM-DD</option>
-          </select>
-        </div>
-      </div>
 
       <div class="settings-section">
         <div class="section-header">
@@ -161,20 +133,17 @@
         </div>
         <div class="p-4 sm:p-5 space-y-3">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Late Fee (₹/day)</label>
-              <input type="number" value="50" class="w-full px-3 py-2.5 text-sm">
-            </div>
+            
             <div>
               <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Grace Period (days)</label>
-              <input type="number" value="5" class="w-full px-3 py-2.5 text-sm">
+              <input type="number" value="3" class="w-full px-3 py-2.5 text-sm" disabled>
             </div>
           </div>
           <div>
             <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">Auto-remind Before Expiry</label>
-            <select class="w-full sm:w-48 px-3 py-2.5 text-sm">
-              <option>3 days before</option>
-              <option selected>5 days before</option>
+            <select disabled class="w-full sm:w-48 px-3 py-2.5 text-sm">
+              <option selected>3 days before</option>
+              <option>5 days before</option>
               <option>7 days before</option>
               <option>10 days before</option>
             </select>
@@ -185,43 +154,13 @@
             <div class="text-sm text-stone-300 font-medium">Auto-vacate Unpaid Seats</div>
             <div class="text-xs text-stone-600">Release seat automatically after grace period ends</div>
           </div>
-          <label class="tog"><input type="checkbox" checked><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div>
-            <div class="text-sm text-stone-300 font-medium">Generate Receipt on Payment</div>
-            <div class="text-xs text-stone-600">Auto-generate PDF receipt and send via WhatsApp/SMS</div>
-          </div>
-          <label class="tog"><input type="checkbox" checked><span class="slider"></span></label>
+          <label class="tog"><input type="checkbox" checked disabled><span class="slider"></span></label>
         </div>
       </div>
     </div>
 
     <!-- ── NOTIFICATIONS TAB ── -->
     <div id="tab-notifications" class="space-y-4 hidden">
-      <div class="settings-section">
-        <div class="section-header"><div class="text-sm font-semibold text-stone-300">📱 SMS / WhatsApp Alerts</div></div>
-        <div class="setting-row">
-          <div><div class="text-sm text-stone-300 font-medium">Seat Assigned</div><div class="text-xs text-stone-600">Notify student when a seat is assigned to them</div></div>
-          <label class="tog"><input type="checkbox" checked><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div><div class="text-sm text-stone-300 font-medium">Fee Due Reminder</div><div class="text-xs text-stone-600">Send reminder before fee expiry date</div></div>
-          <label class="tog"><input type="checkbox" checked><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div><div class="text-sm text-stone-300 font-medium">Payment Received</div><div class="text-xs text-stone-600">Confirm payment receipt to student</div></div>
-          <label class="tog"><input type="checkbox" checked><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div><div class="text-sm text-stone-300 font-medium">Seat Vacated / Expired</div><div class="text-xs text-stone-600">Notify when student's seat is auto-released</div></div>
-          <label class="tog"><input type="checkbox"><span class="slider"></span></label>
-        </div>
-        <div class="p-4 sm:p-5">
-          <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">SMS API Key</label>
-          <input type="password" value="••••••••••••••••" class="w-full px-3 py-2.5 text-sm font-mono">
-        </div>
-      </div>
       <div class="settings-section">
         <div class="section-header"><div class="text-sm font-semibold text-stone-300">📧 Email Notifications</div></div>
         <div class="setting-row">
@@ -231,16 +170,6 @@
         <div class="setting-row">
           <div><div class="text-sm text-stone-300 font-medium">Admin Daily Summary</div><div class="text-xs text-stone-600">Send daily report to admin email every morning</div></div>
           <label class="tog"><input type="checkbox"><span class="slider"></span></label>
-        </div>
-        <div class="p-4 sm:p-5 space-y-3">
-          <div>
-            <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">From Email</label>
-            <input type="email" value="noreply@readspace.in" class="w-full px-3 py-2.5 text-sm">
-          </div>
-          <div>
-            <label class="text-xs text-stone-400 uppercase tracking-wider mb-1 block">SMTP Host</label>
-            <input type="text" placeholder="smtp.gmail.com" class="w-full px-3 py-2.5 text-sm">
-          </div>
         </div>
       </div>
     </div>
@@ -255,30 +184,6 @@
 
     <!-- ── SECURITY TAB ── -->
     <div id="tab-security" class="space-y-4 hidden">
-      <div class="settings-section">
-        <div class="section-header"><div class="text-sm font-semibold text-stone-300">🔐 Authentication</div></div>
-        <div class="setting-row">
-          <div><div class="text-sm text-stone-300 font-medium">Two-Factor Authentication</div><div class="text-xs text-stone-600">Require OTP on every admin login</div></div>
-          <label class="tog"><input type="checkbox"><span class="slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <div><div class="text-sm text-stone-300 font-medium">Session Timeout</div><div class="text-xs text-stone-600">Auto-logout after inactivity</div></div>
-          <select class="text-xs px-3 py-2 rounded-lg" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0">
-            <option>30 minutes</option>
-            <option selected>1 hour</option>
-            <option>4 hours</option>
-            <option>Never</option>
-          </select>
-        </div>
-        <div class="setting-row">
-          <div><div class="text-sm text-stone-300 font-medium">Login Attempt Limit</div><div class="text-xs text-stone-600">Lock account after failed attempts</div></div>
-          <select class="text-xs px-3 py-2 rounded-lg" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0">
-            <option>3 attempts</option>
-            <option selected>5 attempts</option>
-            <option>10 attempts</option>
-          </select>
-        </div>
-      </div>
       <div class="settings-section">
         <div class="section-header"><div class="text-sm font-semibold text-stone-300">🔑 Change Password</div></div>
         <div class="p-4 sm:p-5 space-y-3">
@@ -298,44 +203,6 @@
         </div>
       </div>
     </div>
-
-    <!-- ── DANGER ZONE TAB ── -->
-    <div id="tab-danger" class="space-y-4 hidden">
-      <div class="settings-section" style="border-color:rgba(239,68,68,0.2)">
-        <div class="section-header" style="border-color:rgba(239,68,68,0.1)">
-          <div class="text-sm font-semibold text-red-400">⚠ Danger Zone</div>
-        </div>
-        <div class="setting-row">
-          <div>
-            <div class="text-sm text-stone-300 font-medium">Clear All Seat Assignments</div>
-            <div class="text-xs text-stone-600">Removes all current seat bookings. Students are notified.</div>
-          </div>
-          <button onclick="confirmDanger('Clear all seat assignments? This cannot be undone.')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-400 flex-shrink-0" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2)">Clear</button>
-        </div>
-        <div class="setting-row">
-          <div>
-            <div class="text-sm text-stone-300 font-medium">Export All Data</div>
-            <div class="text-xs text-stone-600">Download all students, fees & booking data as CSV</div>
-          </div>
-          <button onclick="toast('Export started. File will download shortly.')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-stone-400 flex-shrink-0" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">Export</button>
-        </div>
-        <div class="setting-row">
-          <div>
-            <div class="text-sm text-stone-300 font-medium">Archive This Month's Data</div>
-            <div class="text-xs text-stone-600">Move March 2026 data to archive and reset monthly records</div>
-          </div>
-          <button onclick="confirmDanger('Archive March 2026? Data will move to read-only archive.')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-400 flex-shrink-0" style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2)">Archive</button>
-        </div>
-        <div class="setting-row" style="border-bottom:none">
-          <div>
-            <div class="text-sm text-red-400 font-medium">Delete All Data & Reset</div>
-            <div class="text-xs text-stone-600">Permanently deletes all branches, students, fees, and bookings</div>
-          </div>
-          <button onclick="confirmDanger('PERMANENT: Delete all data and reset the system?')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-white flex-shrink-0" style="background:linear-gradient(135deg,#ef4444,#dc2626)">Delete All</button>
-        </div>
-      </div>
-    </div>
-
   </main>
 </div>
 
@@ -393,7 +260,7 @@ function checkBtn(){document.getElementById('menu-btn').style.display=window.inn
 checkBtn();window.addEventListener('resize',checkBtn);
 
 /* ── Tabs ── */
-const tabs=['general','notifications','accounts','security','danger'];
+const tabs=['general','notifications','accounts','security'];
 function setTab(id,btn){
   tabs.forEach(t=>{document.getElementById('tab-'+t).classList.add('hidden')});
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));

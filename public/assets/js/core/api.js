@@ -104,6 +104,64 @@ const Api = (() => {
 
   // ─── Core request ─────────────────────────────────────────────────────────
 
+  async function _refreshAccessToken() {
+
+    try {
+
+      const response = await fetch(
+        CONFIG.baseUrl + '/auth/refresh-token.php',
+        {
+          method: 'POST',
+
+          credentials: 'include',
+
+          headers: {
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      const json = await response.json();
+
+      if (!response.ok) {
+        throw json;
+      }
+
+      // save new access token
+      if (json.token) {
+        Token.set(json.token);
+      }
+
+      return json;
+
+    } catch (err) {
+
+      throw err;
+    }
+  }
+
+  function _isSessionExpired(message = '') {
+
+    const msg = message.toLowerCase();
+
+    return (
+      msg.includes('Access token expired')
+    );
+  }
+
+  async function _retryRequest(options) {
+
+    return await call({
+      ...options,
+
+      // prevent infinite loop
+      _retry: true,
+
+      loader: false,
+      toast: false,
+      errorToast: false
+    });
+  }
   /**
    * Make an API request.
    *
@@ -132,6 +190,9 @@ const Api = (() => {
       toast       = false,
       successMsg  = null,
       errorToast  = true,
+
+      // NEW
+      _retry      = false,
     } = options;
 
     if (!url) {
@@ -180,23 +241,52 @@ const Api = (() => {
       }
 
       // ── 401 → force logout ──
+      // ── 401 Unauthorized ──
       if (response.status === 401) {
+
         const msg = json.message || 'Unauthorized';
 
-        const isSessionIssue =
-          auth &&
-          (
-            msg.toLowerCase().includes('session') ||
-            msg.toLowerCase().includes('token') ||
-            msg.toLowerCase().includes('expired') ||
-            msg.toLowerCase().includes('unauthorized')
-          );
+        // stop infinite retry loop
+        if (_retry) {
 
+          if (loader) UI.loader.hide();
+
+          _forceLogout(msg);
+
+          return Promise.reject(json);
+        }
+
+        const isSessionIssue =
+          auth && _isSessionExpired(msg);
+
+        // token/session issue
+        if (isSessionIssue) {
+
+          try {
+
+            // try refresh token
+            await _refreshAccessToken();
+
+            // retry original request
+            return await _retryRequest(options);
+
+          } catch (refreshError) {
+
+            if (loader) UI.loader.hide();
+
+            _forceLogout(
+              refreshError.message ||
+              'Session expired'
+            );
+
+            return Promise.reject(refreshError);
+          }
+        }
+
+        // normal unauthorized
         if (loader) UI.loader.hide();
 
-        if (isSessionIssue) {
-          _forceLogout(msg);
-        } else if (errorToast) {
+        if (errorToast) {
           UI.toast.error(msg);
         }
 

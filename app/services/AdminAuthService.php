@@ -69,8 +69,9 @@ class AdminAuthService
         $this->otpModel->markUsed($mobileOtp['id']);
 
         // JWT token
-        $token = Token::create($adminId, 'admin', $data['email'], null);
-
+        $token = Token::createAccessToken($adminId, 'admin', $data['email'], null);
+        $refreshToken = Token::create($adminId, 'admin', $data['email'], null);
+        $this->setRefreshTokenCookie($refreshToken);
         return [
             'message' => 'Admin registered successfully',
             'token'   => $token,
@@ -108,7 +109,8 @@ class AdminAuthService
         $isReadOnly = (bool)($admin['is_read_only'] ?? false);
 
         $token = Token::create($admin['id'], 'admin', $admin['email'], null);
-
+        $refreshToken = Token::create($adminId, 'admin', $data['email'], null);
+        $this->setRefreshTokenCookie($refreshToken);
         return [
             'message'     => 'Login successful',
             'token'       => $token,
@@ -120,6 +122,28 @@ class AdminAuthService
                 'email' => $admin['email'],
             ]
         ];
+    }
+
+    private function setRefreshTokenCookie(
+        string $refreshToken
+    ): void {
+
+        setcookie(
+            'refresh_token',
+            $refreshToken,
+            [
+                'expires'  =>
+                    time() + (60 * 60 * 24 * 30),
+
+                'path'     => '/',
+
+                'secure'   => true,
+
+                'httponly' => true,
+
+                'samesite' => 'Strict'
+            ]
+        );
     }
 }
 ?>

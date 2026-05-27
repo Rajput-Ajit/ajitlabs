@@ -56,12 +56,59 @@ class Token
     // =========================================================
     // NO CHANGE in logic
     // =========================================================
-    public static function verify(string $token): object
+    // =========================================================
+    // VERIFY TOKEN
+    // =========================================================
+    public static function verify(
+        string $token
+    ): object
     {
         try {
-            return JWT::decode($token, new Key(self::$secret, 'HS256'));
-        } catch (\Exception $e) {
-            Response::error('Invalid or expired token', 401);
+
+            return JWT::decode(
+                $token,
+                new Key(
+                    self::$secret,
+                    'HS256'
+                )
+            );
+
+        }
+        
+        // token expired
+        catch (\Firebase\JWT\ExpiredException $e) {
+
+            Response::error(
+                'Access token expired',
+                401
+            );
+        }
+
+        // token signature invalid
+        catch (\Firebase\JWT\SignatureInvalidException $e) {
+
+            Response::error(
+                'Invalid token signature',
+                401
+            );
+        }
+
+        // token malformed
+        catch (\UnexpectedValueException $e) {
+
+            Response::error(
+                'Malformed token',
+                401
+            );
+        }
+
+        // fallback
+        catch (\Exception $e) {
+
+            Response::error(
+                'Invalid token',
+                401
+            );
         }
     }
 
@@ -81,5 +128,106 @@ class Token
         }
 
         return $token;
+    }
+
+    public static function createAccessToken(
+        int $userId,
+        string $type,
+        ?string $email
+    ): string {
+
+        $payload = [
+
+            'user_id' => $userId,
+
+            'email'   => $email,
+
+            'type'    => $type,
+
+            'iat'     => time(),
+
+            // 15 mins
+            'exp'     => time() + (60 * 15),
+        ];
+
+        return JWT::encode(
+            $payload,
+            self::$secret,
+            'HS256'
+        );
+    }
+
+    // =========================================================
+    // GET REFRESH TOKEN
+    // =========================================================
+    public static function refreshToken(): string
+    {
+        $token =
+            $_COOKIE['refresh_token'] ?? '';
+
+        if (!$token) {
+
+            Response::error(
+                'Refresh token missing',
+                401
+            );
+        }
+
+        return $token;
+    }
+
+    // =========================================================
+    // VERIFY REFRESH TOKEN
+    // =========================================================
+    // =========================================================
+    // VERIFY REFRESH TOKEN
+    // =========================================================
+    public static function verifyRefreshToken(
+        string $token
+    ): object
+    {
+        try {
+
+            return JWT::decode(
+                $token,
+                new Key(
+                    self::$secret,
+                    'HS256'
+                )
+            );
+
+        }
+
+        catch (\Firebase\JWT\ExpiredException $e) {
+
+            Response::error(
+                'Refresh token expired',
+                401
+            );
+        }
+
+        catch (\Firebase\JWT\SignatureInvalidException $e) {
+
+            Response::error(
+                'Invalid refresh token signature',
+                401
+            );
+        }
+
+        catch (\UnexpectedValueException $e) {
+
+            Response::error(
+                'Malformed refresh token',
+                401
+            );
+        }
+
+        catch (\Exception $e) {
+
+            Response::error(
+                'Invalid refresh token',
+                401
+            );
+        }
     }
 }

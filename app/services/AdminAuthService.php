@@ -107,8 +107,9 @@ class AdminAuthService
 
         // ✅ NEW: check if admin is in read-only mode (expired plan)
         $isReadOnly = (bool)($admin['is_read_only'] ?? false);
+        $adminId = $admin['id'];
 
-        $token = Token::create($admin['id'], 'admin', $admin['email'], null);
+        $token = Token::create($adminId, 'admin', $admin['email'], null);
         $refreshToken = Token::create($adminId, 'admin', $data['email'], null);
         $this->setRefreshTokenCookie($refreshToken);
         return [
@@ -119,7 +120,7 @@ class AdminAuthService
                 'id'    => $admin['id'],
                 'uuid'  => $admin['uuid'], // ✅ NEW: expose uuid for public references
                 'name'  => $admin['first_name'] . ' ' . $admin['last_name'],
-                'email' => $admin['email'],
+                'email' => $admin['email']
             ]
         ];
     }
